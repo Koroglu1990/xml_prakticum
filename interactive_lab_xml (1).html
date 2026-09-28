@@ -1,0 +1,2239 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Практикум: XML технологии</title>
+<style>
+  :root {
+    --bg: #f4f7f8;
+    --panel: #ffffff;
+    --text: #202832;
+    --text-dim: #5b6772;
+    --border: #dfe6ea;
+    --brand-dark: #0f3d5c;
+    --brand: #0f5c6e;
+    --brand-teal: #0f8a8a;
+    --brand-light: #eaf4fb;
+    --ok-bg: #eaf7ee;
+    --ok-border: #2f9e56;
+    --ok-text: #1f6e3b;
+    --warn-bg: #fff7e6;
+    --warn-border: #d1a13a;
+    --warn-text: #8a6516;
+    --err-bg: #fdeeea;
+    --err-border: #d9532c;
+    --err-text: #b8401d;
+    --code-bg: #1e2733;
+    --code-text: #d7e3ea;
+    box-sizing: border-box;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #10151a;
+      --panel: #171f26;
+      --text: #e7edf1;
+      --text-dim: #9fb0ba;
+      --border: #2a343c;
+      --brand-light: #17313f;
+      --code-bg: #0d1319;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #10151a;
+    --panel: #171f26;
+    --text: #e7edf1;
+    --text-dim: #9fb0ba;
+    --border: #2a343c;
+    --brand-light: #17313f;
+    --code-bg: #0d1319;
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, "Segoe UI", "DejaVu Sans", sans-serif;
+    line-height: 1.55;
+    -webkit-user-select: none; user-select: none; /* блокируем выделение везде по умолчанию */
+  }
+  /* но в текстовых полях студент должен свободно печатать */
+  textarea, input { -webkit-user-select: text; user-select: text; }
+  p, li, .selectable { -webkit-user-select: text; user-select: text; } /* обычный текст пусть выделяется — это не код */
+
+  .topbar {
+    position: sticky; top: 0; z-index: 10;
+    background: linear-gradient(180deg, var(--brand-dark), var(--brand));
+    color: #fff; padding: 14px 20px calc(14px + env(safe-area-inset-top, 0px)) 20px;
+    padding-top: calc(14px + env(safe-area-inset-top, 0px));
+  }
+  .topbar .row { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .topbar h1 { font-size: 15px; margin: 0; font-weight: 700; letter-spacing: 0.2px; }
+  .topbar .sub { font-size: 11.5px; opacity: 0.8; margin-top: 2px; }
+  .progress-wrap { max-width: 720px; margin: 10px auto 0 auto; }
+  .progress-track { background: rgba(255,255,255,0.18); border-radius: 20px; height: 7px; overflow: hidden; }
+  .progress-fill { background: #7fe0d6; height: 100%; border-radius: 20px; transition: width .3s ease; }
+  .progress-label { font-size: 10.5px; opacity: 0.85; margin-top: 5px; display:flex; justify-content: space-between; }
+
+  .wrap { max-width: 720px; margin: 0 auto; padding: 18px 16px 60px 16px; }
+
+  .card {
+    background: var(--panel); border: 1px solid var(--border); border-radius: 12px;
+    padding: 18px 18px; margin-bottom: 16px;
+  }
+  .tag {
+    display:inline-block; background: var(--brand-light); color: var(--brand);
+    font-size: 10.5px; font-weight: 700; letter-spacing: 0.4px; text-transform: uppercase;
+    padding: 3px 10px; border-radius: 20px; margin-bottom: 8px;
+  }
+  h2 { font-size: 19px; color: var(--brand-dark); margin: 0 0 10px 0; }
+  h3 { font-size: 14.5px; color: var(--brand-dark); margin: 16px 0 6px 0; }
+  p { margin: 0 0 10px 0; color: var(--text); }
+  ul, ol { margin: 0 0 10px 0; padding-left: 20px; }
+  li { margin-bottom: 5px; }
+  b { color: var(--brand-dark); }
+  .btn-tag {
+    display:inline-block; background: var(--brand-light); border: 1px solid var(--border);
+    color: var(--brand); border-radius: 5px; padding: 1px 7px; font-size: 12.5px; font-weight: 700;
+  }
+  .kbd {
+    display:inline-block; background: #2a333d; color: #e8eef2; border-radius: 5px;
+    padding: 1px 7px; font-family: "SFMono-Regular", Menlo, monospace; font-size: 12px;
+  }
+
+  .callout { border-radius: 8px; padding: 10px 14px; margin: 12px 0; font-size: 13.5px; }
+  .callout .ct { font-weight: 700; display:block; margin-bottom: 3px; }
+  .callout.info { background: var(--brand-light); border-left: 4px solid var(--brand); }
+  .callout.info .ct { color: var(--brand); }
+  .callout.warn { background: var(--warn-bg); border-left: 4px solid var(--warn-border); }
+  .callout.warn .ct { color: var(--warn-text); }
+  .callout.ok { background: var(--ok-bg); border-left: 4px solid var(--ok-border); }
+  .callout.ok .ct { color: var(--ok-text); }
+
+  .step { display: flex; margin-bottom: 12px; gap: 10px; }
+  .step .num {
+    background: var(--brand-teal); color: #fff; min-width: 24px; height: 24px; border-radius: 50%;
+    display:flex; align-items:center; justify-content:center; font-weight:700; font-size: 12px; flex-shrink:0;
+  }
+  .step .txt { padding-top: 2px; }
+
+  /* --- защищённый блок кода (не выделяется, копирование блокируется) --- */
+  .codebox-label {
+    display:inline-block; background: var(--brand-dark); color:#dff3f1; font-family: Menlo, monospace;
+    font-size: 11px; padding: 4px 10px; border-radius: 5px 5px 0 0; margin: 10px 0 -6px 0;
+  }
+  .codebox {
+    background: var(--code-bg); color: var(--code-text); font-family: "SFMono-Regular", Menlo, monospace;
+    font-size: 12px; border-radius: 8px; padding: 12px 14px; margin: 6px 0 4px 0;
+    white-space: pre; overflow-x: auto; line-height: 1.5;
+    -webkit-user-select: none !important; user-select: none !important;
+    position: relative;
+  }
+  .codebox::after {
+    content: "🔒 нельзя скопировать — впишите ниже сами";
+    display: block; font-size: 10px; opacity: 0.55; margin-top: 8px; user-select: none;
+  }
+
+  .challenge {
+    border: 1px solid var(--border); border-radius: 10px; padding: 14px; margin: 14px 0; background: var(--bg);
+  }
+  .challenge textarea {
+    width: 100%; min-height: 120px; font-family: "SFMono-Regular", Menlo, monospace; font-size: 12.5px;
+    border-radius: 8px; border: 1.5px solid var(--border); background: var(--panel); color: var(--text);
+    padding: 10px; resize: vertical; line-height: 1.5; tab-size: 4;
+  }
+  .challenge textarea:focus { outline: none; border-color: var(--brand-teal); }
+  .challenge .row2 { display:flex; gap:8px; align-items:center; margin-top: 8px; flex-wrap: wrap; }
+  .check-btn {
+    background: var(--brand); color:#fff; border:none; border-radius: 7px; padding: 8px 16px;
+    font-size: 13px; font-weight: 700; cursor: pointer;
+  }
+  .check-btn:hover { background: var(--brand-dark); }
+  .result-msg { font-size: 12.5px; font-weight: 600; }
+  .result-msg.ok { color: var(--ok-text); }
+  .result-msg.err { color: var(--err-text); }
+  .done-badge {
+    display:inline-block; background: var(--ok-bg); color: var(--ok-text); border: 1px solid var(--ok-border);
+    border-radius: 20px; padding: 2px 10px; font-size: 11px; font-weight: 700; margin-left: 6px;
+  }
+  .why-box {
+    background: var(--brand-light); border-radius: 8px; padding: 9px 13px; margin: 0 0 4px 0;
+    font-size: 12.5px; color: var(--text);
+  }
+  .nav-row { display:flex; justify-content: space-between; align-items:center; margin-top: 10px; gap: 10px; }
+  .nav-btn {
+    background: var(--brand-teal); color:#fff; border:none; border-radius: 9px; padding: 12px 20px;
+    font-size: 14px; font-weight: 700; cursor: pointer; flex: 1;
+  }
+  .nav-btn:disabled { background: var(--border); color: var(--text-dim); cursor: not-allowed; }
+  .nav-btn.secondary { background: transparent; color: var(--brand); border: 1.5px solid var(--border); flex: 0 0 auto; }
+
+  .toc { display: grid; gap: 6px; margin: 14px 0; }
+  .toc-item {
+    display:flex; align-items:center; gap: 10px; padding: 10px 12px; border-radius: 8px;
+    border: 1px solid var(--border); cursor: pointer; background: var(--panel);
+  }
+  .toc-item.current { border-color: var(--brand-teal); background: var(--brand-light); }
+  .toc-item.locked { opacity: 0.5; cursor: not-allowed; }
+  .toc-num {
+    min-width: 22px; height: 22px; border-radius: 50%; background: var(--border); color: var(--text-dim);
+    display:flex; align-items:center; justify-content:center; font-size: 11px; font-weight: 700; flex-shrink:0;
+  }
+  .toc-item.current .toc-num { background: var(--brand-teal); color: #fff; }
+  .toc-item.complete .toc-num { background: var(--ok-border); color: #fff; }
+  .toc-title { font-size: 13px; }
+
+  footer.pagefoot { text-align:center; color: var(--text-dim); font-size: 11px; padding: 10px 0 30px 0; }
+
+  .reset-link { color: var(--text-dim); font-size: 11px; text-decoration: underline; cursor: pointer; background:none; border:none; padding: 0; }
+
+  /* --- вход по имени --- */
+  .gate { max-width: 420px; margin: 60px auto; padding: 0 16px; }
+  .gate .card { text-align: center; }
+  .gate input {
+    width: 100%; padding: 11px 13px; margin: 8px 0; border-radius: 8px;
+    border: 1.5px solid var(--border); background: var(--panel); color: var(--text); font-size: 14px;
+  }
+  .gate input:focus { outline: none; border-color: var(--brand-teal); }
+  .gate-btn {
+    width: 100%; background: var(--brand-teal); color:#fff; border:none; border-radius: 9px;
+    padding: 13px; font-size: 14.5px; font-weight: 700; cursor: pointer; margin-top: 8px;
+  }
+  .gate-btn:disabled { background: var(--border); color: var(--text-dim); cursor: not-allowed; }
+  .gate-err { color: var(--err-text); font-size: 12px; margin-top: 6px; min-height: 16px; }
+
+  /* --- отчёт для преподавателя --- */
+  .report-box {
+    background: var(--code-bg); color: var(--code-text); border-radius: 8px; padding: 12px 14px;
+    font-family: "SFMono-Regular", Menlo, monospace; font-size: 12px; white-space: pre-wrap;
+    -webkit-user-select: text; user-select: text; margin: 10px 0;
+  }
+  .copy-btn {
+    background: var(--brand-dark); color:#fff; border:none; border-radius: 8px; padding: 10px 18px;
+    font-size: 13.5px; font-weight: 700; cursor: pointer; margin-top: 8px;
+  }
+  .copy-btn.copied { background: var(--ok-border); }
+
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(10,15,20,0.55); z-index: 50;
+    display: flex; align-items: center; justify-content: center; padding: 16px;
+  }
+  .modal-card {
+    background: var(--panel); border-radius: 12px; padding: 20px; max-width: 460px; width: 100%;
+    max-height: 85vh; overflow-y: auto;
+  }
+  .modal-close {
+    float: right; background: none; border: none; font-size: 18px; color: var(--text-dim); cursor: pointer;
+  }
+
+  ::selection { background: transparent; }
+  textarea::selection, input::selection, p::selection, li::selection { background: #b7d9e8; }
+
+  /* --- дополнения для XML-практикума --- */
+  table.t { width: 100%; border-collapse: collapse; font-size: 13px; margin: 8px 0 14px 0; }
+  table.t th { text-align: left; background: var(--brand-light); color: var(--brand-dark); padding: 7px 9px; border: 1px solid var(--border); }
+  table.t td { padding: 7px 9px; border: 1px solid var(--border); vertical-align: top; background: var(--panel); }
+  .codebox .ln {
+    display: inline-block; min-width: 2.4em; margin-right: 12px; padding-right: 8px; text-align: right;
+    opacity: 0.45; border-right: 1px solid rgba(255,255,255,0.2);
+    -webkit-user-select: none; user-select: none;
+  }
+  .codebox.view::after { content: "🔒 только для чтения — ответ впишите ниже"; }
+  .callout b, .callout i { color: inherit; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="row">
+    <div>
+      <h1>Практикум: XML технологии</h1>
+      <div class="sub" id="subLabel">Правила XML, DTD и обзор технологий — на практике</div>
+    </div>
+    <div style="text-align:right;">
+      <div id="studentLabel" style="font-size:11.5px; color:#dff3f1; margin-bottom:3px;"></div>
+      <button class="reset-link" onclick="toggleReportModal(true)" style="color:#dff3f1; margin-right:10px;">Отчёт о прогрессе</button>
+      <button class="reset-link" onclick="resetProgress()" style="color:#dff3f1;">Сбросить прогресс</button>
+    </div>
+  </div>
+  <div class="progress-wrap">
+    <div class="progress-track"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+    <div class="progress-label"><span id="progressText">Часть 1 из 17</span><span id="progressPct">0%</span></div>
+  </div>
+</div>
+
+<div class="wrap" id="app"></div>
+
+<footer class="pagefoot">Код в тёмных блоках нельзя выделить и скопировать — его нужно перепечатать в поле ниже, чтобы двигаться дальше.</footer>
+
+<script>
+/* ============================ ЯДРО ПРОВЕРКИ XML / DTD ============================ */
+/* Это учебный разборщик: он читает документ так же строго, как настоящий парсер,
+   и объясняет ошибки по-русски. Он не заменяет валидатор, а тренирует те же навыки. */
+
+const NAME_RE = /^[\p{L}_:][\p{L}\p{N}._:\-\u00B7]*$/u;
+const NMTOKEN_RE = /^[\p{L}\p{N}._:\-\u00B7]+$/u;
+const PREDEF_ENT = ["lt", "gt", "amp", "quot", "apos"];
+
+function makeLiner(src) {
+  const starts = [0];
+  for (let i = 0; i < src.length; i++) if (src.charCodeAt(i) === 10) starts.push(i + 1);
+  return function (pos) {
+    let lo = 0, hi = starts.length - 1;
+    if (pos < 0) pos = 0;
+    while (lo < hi) {
+      const mid = (lo + hi + 1) >> 1;
+      if (starts[mid] <= pos) lo = mid; else hi = mid - 1;
+    }
+    return lo + 1;
+  };
+}
+
+/* ---------- разбор XML ---------- */
+function parseXML(srcRaw) {
+  let src = String(srcRaw).replace(/\r\n?/g, "\n");
+  if (src.charCodeAt(0) === 0xFEFF) src = src.slice(1);
+  const n = src.length;
+  const L = makeLiner(src);
+  const fail = (pos, msg) => ({ ok: false, line: L(Math.min(pos, n)), msg });
+  const isWs = (c) => c === " " || c === "\n" || c === "\t" || c === "\r";
+  let i = 0, decl = null, doctype = null;
+
+  // --- XML-декларация ---
+  const dm = /^<\?xml(\s[\s\S]*?)?\?>/.exec(src);
+  if (dm) {
+    const body = dm[1] || "";
+    const attrs = {};
+    let m; const re = /([A-Za-z]+)\s*=\s*("([^"]*)"|'([^']*)')/g;
+    while ((m = re.exec(body))) attrs[m[1]] = m[3] !== undefined ? m[3] : m[4];
+    if (!attrs.version) return fail(0, "В XML-декларации обязательно нужен version, например version=\"1.0\"");
+    decl = { version: attrs.version, encoding: attrs.encoding || null, standalone: attrs.standalone || null };
+    i = dm[0].length;
+  } else if (/^\s+<\?xml[\s?]/.test(src)) {
+    return fail(src.search(/\S/), "XML-декларация должна быть самой первой строкой файла: перед ней не должно быть пробелов и пустых строк");
+  } else if (/^<\?xml/.test(src)) {
+    return fail(0, "XML-декларация не закрыта: не хватает ?> в конце");
+  }
+
+  // --- пропуск комментариев, инструкций и DOCTYPE ---
+  function skipMisc(allowDoctype) {
+    for (;;) {
+      while (i < n && isWs(src[i])) i++;
+      if (src.startsWith("<!--", i)) {
+        const e = src.indexOf("-->", i + 4);
+        if (e === -1) return fail(i, "Комментарий не закрыт: не хватает -->");
+        const body = src.slice(i + 4, e);
+        if (body.includes("--")) return fail(i, "Внутри комментария нельзя писать два дефиса подряд");
+        i = e + 3;
+      } else if (src.startsWith("<?", i)) {
+        const e = src.indexOf("?>", i + 2);
+        if (e === -1) return fail(i, "Инструкция обработки не закрыта: не хватает ?>");
+        const target = /^<\?([^\s?]+)/.exec(src.slice(i, i + 80));
+        if (!target || !NAME_RE.test(target[1])) return fail(i, "Неверная инструкция обработки <?…?>");
+        if (target[1].toLowerCase() === "xml") return fail(i, "Декларация <?xml …?> допустима только в самом начале документа");
+        i = e + 2;
+      } else if (allowDoctype && src.startsWith("<!DOCTYPE", i)) {
+        if (doctype) return fail(i, "DOCTYPE можно указать только один раз");
+        const start = i;
+        const nm = /<!DOCTYPE\s+([^\s\[>]+)/y; nm.lastIndex = i;
+        const m = nm.exec(src);
+        if (!m) return fail(i, "После DOCTYPE нужно указать имя корневого элемента");
+        let p = i + m[0].length;
+        const dt = { name: m[1], system: null, publicId: null, subset: null, subsetStart: 0 };
+        while (p < n && isWs(src[p])) p++;
+        let mm;
+        const sys = /SYSTEM\s+("([^"]*)"|'([^']*)')/y; sys.lastIndex = p;
+        const pub = /PUBLIC\s+("([^"]*)"|'([^']*)')(\s+("([^"]*)"|'([^']*)'))?/y; pub.lastIndex = p;
+        if ((mm = sys.exec(src))) { dt.system = mm[2] !== undefined ? mm[2] : mm[3]; p += mm[0].length; }
+        else if ((mm = pub.exec(src))) {
+          dt.publicId = mm[2] !== undefined ? mm[2] : mm[3];
+          dt.system = mm[6] !== undefined ? mm[6] : (mm[7] !== undefined ? mm[7] : null);
+          p += mm[0].length;
+        }
+        while (p < n && isWs(src[p])) p++;
+        if (src[p] === "[") {
+          let k = p + 1; dt.subsetStart = k;
+          for (;;) {
+            if (k >= n) return fail(start, "В DOCTYPE не закрыта квадратная скобка: не хватает ]");
+            const c = src[k];
+            if (c === '"' || c === "'") { const e = src.indexOf(c, k + 1); if (e === -1) return fail(k, "В DTD не закрыта кавычка"); k = e + 1; continue; }
+            if (src.startsWith("<!--", k)) { const e = src.indexOf("-->", k + 4); if (e === -1) return fail(k, "В DTD не закрыт комментарий"); k = e + 3; continue; }
+            if (c === "]") break;
+            k++;
+          }
+          dt.subset = src.slice(p + 1, k);
+          dt.subsetLine = L(p + 1);
+          p = k + 1;
+          while (p < n && isWs(src[p])) p++;
+        }
+        if (src[p] !== ">") return fail(p, "Объявление DOCTYPE должно заканчиваться символом >");
+        doctype = dt;
+        i = p + 1;
+      } else break;
+    }
+    return null;
+  }
+  let err = skipMisc(true);
+  if (err) return err;
+
+  // --- дерево элементов ---
+  const stack = [];
+  const scopes = [{ xml: "http://www.w3.org/XML/1998/namespace" }];
+  let root = null;
+  const top = () => stack[stack.length - 1];
+
+  while (i < n) {
+    if (src[i] !== "<") {
+      const j = src.indexOf("<", i);
+      const end = j === -1 ? n : j;
+      const text = src.slice(i, end);
+      if (stack.length === 0) {
+        if (/\S/.test(text)) return fail(i + text.search(/\S/), root ? "После корневого элемента не должно быть текста" : "Текст находится вне корневого элемента");
+      } else {
+        const bad = /&(?!(?:[\p{L}_:][\p{L}\p{N}._:\-]*|#[0-9]+|#x[0-9a-fA-F]+);)/u.exec(text);
+        if (bad) return fail(i + bad.index, "Символ & в тексте нужно писать как &amp; (или это должна быть ссылка на сущность вида &имя;)");
+        if (text.includes("]]>")) return fail(i + text.indexOf("]]>"), "Последовательность ]]> нельзя использовать в обычном тексте");
+        top().children.push({ type: "text", value: text, line: L(i) });
+      }
+      i = end;
+      continue;
+    }
+    if (src.startsWith("<!--", i)) {
+      const e = src.indexOf("-->", i + 4);
+      if (e === -1) return fail(i, "Комментарий не закрыт: не хватает -->");
+      const body = src.slice(i + 4, e);
+      if (body.includes("--")) return fail(i, "Внутри комментария нельзя писать два дефиса подряд");
+      if (stack.length) top().children.push({ type: "comment", value: body, line: L(i) });
+      i = e + 3;
+      continue;
+    }
+    if (src.startsWith("<![CDATA[", i)) {
+      if (!stack.length) return fail(i, "Секция CDATA допустима только внутри элемента");
+      const e = src.indexOf("]]>", i + 9);
+      if (e === -1) return fail(i, "Секция CDATA не закрыта: не хватает ]]>");
+      top().children.push({ type: "cdata", value: src.slice(i + 9, e), line: L(i) });
+      i = e + 3;
+      continue;
+    }
+    if (src.startsWith("<?", i)) {
+      err = null;
+      const e = src.indexOf("?>", i + 2);
+      if (e === -1) return fail(i, "Инструкция обработки не закрыта: не хватает ?>");
+      const target = /^<\?([^\s?]+)/.exec(src.slice(i, i + 80));
+      if (target && target[1].toLowerCase() === "xml") return fail(i, "Декларация <?xml …?> допустима только в самом начале документа");
+      i = e + 2;
+      continue;
+    }
+    if (src.startsWith("<!", i)) {
+      return fail(i, "Здесь неожиданная конструкция <!…: DOCTYPE можно писать только до корневого элемента");
+    }
+    if (src.startsWith("</", i)) {
+      const re = /<\/([^\s>]*)\s*>/y; re.lastIndex = i;
+      const m = re.exec(src);
+      if (!m) return fail(i, "Закрывающий тег записан неверно: он должен выглядеть как </имя>");
+      const name = m[1];
+      if (!stack.length) return fail(i, `Лишний закрывающий тег </${name}>: такого открытого элемента нет`);
+      const t = top();
+      if (t.name !== name) {
+        let hint = "";
+        if (t.name.toLowerCase() === name.toLowerCase()) hint = " Регистр важен: XML различает большие и маленькие буквы.";
+        else if (stack.some(s => s.name === name)) hint = ` Сначала нужно закрыть <${t.name}>.`;
+        return fail(i, `Закрывающий тег </${name}> не подходит: сейчас открыт элемент <${t.name}>.${hint}`);
+      }
+      stack.pop(); scopes.pop();
+      i = m[0].length + i;
+      continue;
+    }
+    // --- начальный тег ---
+    const nm = /<([^\s\/>]*)/y; nm.lastIndex = i;
+    const m = nm.exec(src);
+    const name = m[1];
+    if (name === "") return fail(i, "Символ < начинает тег. Если он нужен как обычный текст, запишите его как &lt; или поместите текст в CDATA");
+    if (!NAME_RE.test(name)) return fail(i, `Недопустимое имя элемента «${name}»: имя должно начинаться с буквы или подчёркивания, дальше — буквы, цифры, дефис, точка`);
+    if (stack.length === 0 && root) return fail(i, `В документе может быть только один корневой элемент, а здесь начинается второй — <${name}>`);
+    let p = i + m[0].length;
+    const attrs = [], seen = new Set();
+    let selfClose = false;
+    for (;;) {
+      const ws0 = p;
+      while (p < n && isWs(src[p])) p++;
+      const hadWs = p > ws0;
+      if (p >= n) return fail(i, `Тег <${name}> не закрыт: не хватает символа >`);
+      if (src[p] === ">") { p++; break; }
+      if (src[p] === "/") {
+        if (src[p + 1] === ">") { selfClose = true; p += 2; break; }
+        return fail(p, `Лишний символ «/» внутри тега <${name}>`);
+      }
+      if (!hadWs) return fail(p, `В теге <${name}> между атрибутами нужен пробел`);
+      const am = /[^\s=\/>"']+/y; am.lastIndex = p;
+      const a = am.exec(src);
+      if (!a) return fail(p, `Непонятный символ «${src[p]}» внутри тега <${name}>`);
+      const aname = a[0], apos = p;
+      if (!NAME_RE.test(aname)) return fail(apos, `Недопустимое имя атрибута «${aname}»`);
+      p += aname.length;
+      while (p < n && isWs(src[p])) p++;
+      if (src[p] !== "=") return fail(apos, `У атрибута ${aname} нет значения: он должен выглядеть как ${aname}="значение"`);
+      p++;
+      while (p < n && isWs(src[p])) p++;
+      const q = src[p];
+      if (q !== '"' && q !== "'") return fail(p, `Значение атрибута ${aname} должно быть в кавычках`);
+      const e = src.indexOf(q, p + 1);
+      if (e === -1) return fail(p, `У значения атрибута ${aname} нет закрывающей кавычки`);
+      const val = src.slice(p + 1, e);
+      if (val.includes("<")) return fail(p, `В значении атрибута ${aname} нельзя писать символ <`);
+      if (/&(?!(?:[\p{L}_:][\p{L}\p{N}._:\-]*|#[0-9]+|#x[0-9a-fA-F]+);)/u.test(val)) return fail(p, `В значении атрибута ${aname} символ & нужно писать как &amp;`);
+      if (seen.has(aname)) return fail(apos, `У элемента <${name}> атрибут ${aname} указан дважды`);
+      seen.add(aname);
+      attrs.push({ name: aname, value: val });
+      p = e + 1;
+    }
+    // пространства имён
+    const scope = Object.assign({}, scopes[scopes.length - 1]);
+    for (const a of attrs) {
+      if (a.name === "xmlns") scope[""] = a.value;
+      else if (a.name.startsWith("xmlns:")) scope[a.name.slice(6)] = a.value;
+    }
+    const parts = name.split(":");
+    if (parts.length > 2) return fail(i, `Имя элемента «${name}» содержит больше одного двоеточия`);
+    const prefix = parts.length === 2 ? parts[0] : "";
+    const local = parts.length === 2 ? parts[1] : name;
+    if (prefix && scope[prefix] === undefined) return fail(i, `Префикс «${prefix}» не объявлен: перед использованием нужно написать xmlns:${prefix}="…"`);
+    const node = { type: "el", name, local, prefix, ns: prefix ? scope[prefix] : (scope[""] || ""), attrs: [], children: [], line: L(i), selfClose };
+    for (const a of attrs) {
+      const ap = a.name.split(":");
+      let ans = "";
+      if (a.name === "xmlns" || a.name.startsWith("xmlns:")) ans = "http://www.w3.org/2000/xmlns/";
+      else if (ap.length === 2) {
+        if (scope[ap[0]] === undefined) return fail(i, `Префикс «${ap[0]}» у атрибута ${a.name} не объявлен`);
+        ans = scope[ap[0]];
+      }
+      node.attrs.push({ name: a.name, value: a.value, ns: ans });
+    }
+    if (stack.length) top().children.push(node); else root = node;
+    if (!selfClose) { stack.push(node); scopes.push(scope); }
+    i = p;
+  }
+  if (stack.length) {
+    const t = top();
+    return { ok: false, line: t.line, msg: `Элемент <${t.name}> не закрыт: не хватает </${t.name}>` };
+  }
+  if (!root) return fail(n, "В документе нет корневого элемента");
+  // сущности &имя; должны быть объявлены (если нет внешнего DTD, который мы не видим)
+  const declared = new Set();
+  const external = !!(doctype && (doctype.system || doctype.publicId));
+  if (doctype && doctype.subset) {
+    const dd = parseDTD(doctype.subset, doctype.subsetLine);
+    if (dd.ok) Object.keys(dd.entities).forEach(k => declared.add(k));
+  }
+  const findEnt = (text, line) => {
+    const re = /&([\p{L}_:][\p{L}\p{N}._:\-]*);/gu; let m;
+    while ((m = re.exec(text))) {
+      if (PREDEF_ENT.includes(m[1]) || declared.has(m[1]) || external) continue;
+      return { nm: m[1], line: line + (text.slice(0, m.index).match(/\n/g) || []).length };
+    }
+    return null;
+  };
+  const entErr = (function walk(el) {
+    for (const a of el.attrs) { const r = findEnt(a.value, el.line); if (r) return r; }
+    for (const c of el.children) {
+      if (c.type === "text") { const r = findEnt(c.value, c.line); if (r) return r; }
+      else if (c.type === "el") { const r = walk(c); if (r) return r; }
+    }
+    return null;
+  })(root);
+  if (entErr) return { ok: false, line: entErr.line, msg: `Сущность &${entErr.nm}; не объявлена: для неё нужна строка <!ENTITY ${entErr.nm} "…"> в DTD` };
+  return { ok: true, decl, doctype, root };
+}
+
+/* ---------- модель содержания ---------- */
+function tokenizeModel(s) {
+  const out = []; let i = 0;
+  while (i < s.length) {
+    const c = s[i];
+    if (/\s/.test(c)) { i++; continue; }
+    if ("(),|+*?".includes(c)) { out.push(c); i++; continue; }
+    const m = /^(#PCDATA|[\p{L}_:][\p{L}\p{N}._:\-]*)/u.exec(s.slice(i));
+    if (!m) return null;
+    out.push(m[1]); i += m[1].length;
+  }
+  return out;
+}
+function parseModel(str) {
+  const s = str.trim();
+  if (s === "EMPTY" || s === "ANY") return { ok: true, kind: s, canon: s };
+  const tk = tokenizeModel(s);
+  if (!tk || tk[0] !== "(") return { ok: false, msg: "модель содержания должна быть в скобках, например (title, author) — или EMPTY / ANY" };
+  let p = 0;
+  const bad = (m) => { throw new Error(m); };
+  const quant = () => (tk[p] !== undefined && tk[p].length === 1 && "+*?".includes(tk[p])) ? tk[p++] : "";
+  function group() {
+    if (tk[p] !== "(") bad("ожидалась открывающая скобка (");
+    p++;
+    const items = [item()];
+    let sep = null;
+    while (tk[p] === "," || tk[p] === "|") {
+      if (sep && sep !== tk[p]) bad("в одних скобках нельзя смешивать запятую и |");
+      sep = tk[p]; p++;
+      items.push(item());
+    }
+    if (tk[p] !== ")") bad("не хватает закрывающей скобки )");
+    p++;
+    return { t: sep === "|" ? "alt" : "seq", items, q: quant() };
+  }
+  function item() {
+    if (tk[p] === "(") return group();
+    const v = tk[p];
+    if (v === undefined || (v.length === 1 && "(),|+*?".includes(v))) bad("здесь ожидалось имя элемента");
+    p++;
+    return { t: "name", v, q: quant() };
+  }
+  try {
+    const g = group();
+    if (p !== tk.length) bad("после модели содержания есть лишний текст");
+    const hasPc = (nd) => nd.t === "name" ? nd.v === "#PCDATA" : nd.items.some(hasPc);
+    if (hasPc(g)) {
+      const names = g.items;
+      const only = names.length === 1 && names[0].t === "name" && names[0].v === "#PCDATA" && names[0].q === "";
+      const mixed = g.t === "alt" && g.q === "*" && names[0].t === "name" && names[0].v === "#PCDATA" &&
+        names.slice(1).every(x => x.t === "name" && x.v !== "#PCDATA" && x.q === "");
+      if (!(only && g.q === "") && !mixed && !(only && g.q === "*")) bad("#PCDATA можно писать только как (#PCDATA) или (#PCDATA | имя | имя)*");
+      const canon = only ? "(#PCDATA)" + (g.q || "") : "(" + names.map(x => x.v).join("|") + ")*";
+      return { ok: true, kind: only ? "text" : "mixed", canon, allowed: names.slice(1).map(x => x.v), ast: g };
+    }
+    const canon = (function c(nd) {
+      if (nd.t === "name") return nd.v + nd.q;
+      return "(" + nd.items.map(c).join(nd.t === "seq" ? "," : "|") + ")" + nd.q;
+    })(g);
+    return { ok: true, kind: "children", canon, ast: g };
+  } catch (e) {
+    return { ok: false, msg: e.message };
+  }
+}
+function modelRegex(ast) {
+  const esc = (v) => v.replace(/[.\-]/g, "\\$&");
+  const rx = (nd) => {
+    const inner = nd.t === "name" ? `(?:${esc(nd.v)} )` : `(?:${nd.items.map(rx).join(nd.t === "seq" ? "" : "|")})`;
+    return inner + (nd.q || "");
+  };
+  return new RegExp("^" + rx(ast) + "$");
+}
+
+/* ---------- разбор DTD ---------- */
+function parseDTD(textRaw, lineOffset) {
+  const src = String(textRaw).replace(/\r\n?/g, "\n");
+  const off = (lineOffset || 1) - 1;
+  const n = src.length;
+  const L0 = makeLiner(src);
+  const L = (p) => L0(p) + off;
+  const fail = (pos, msg) => ({ ok: false, line: L(Math.min(pos, n)), msg });
+  const res = { ok: true, elements: {}, attrs: [], attrsBy: {}, entities: {}, order: [] };
+  let i = 0;
+  const ATYPES = ["CDATA", "IDREFS", "IDREF", "ID", "NMTOKENS", "NMTOKEN", "ENTITIES", "ENTITY"];
+  for (;;) {
+    while (i < n && /\s/.test(src[i])) i++;
+    if (i >= n) break;
+    if (src.startsWith("<!--", i)) {
+      const e = src.indexOf("-->", i + 4);
+      if (e === -1) return fail(i, "Комментарий в DTD не закрыт: не хватает -->");
+      i = e + 3; continue;
+    }
+    if (src.startsWith("<!ELEMENT", i)) {
+      const re = /<!ELEMENT\s+([^\s>]+)\s+([^>]*?)\s*>/y; re.lastIndex = i;
+      const m = re.exec(src);
+      if (!m) return fail(i, "Объявление <!ELEMENT …> записано неверно: нужны имя, модель содержания в скобках и закрывающий >");
+      if (!NAME_RE.test(m[1])) return fail(i, `Недопустимое имя элемента «${m[1]}» в <!ELEMENT>`);
+      const pm = parseModel(m[2]);
+      if (!pm.ok) return fail(i, `В <!ELEMENT ${m[1]} …> ошибка в модели содержания: ${pm.msg}`);
+      if (res.elements[m[1]]) return fail(i, `Элемент ${m[1]} объявлен дважды`);
+      res.elements[m[1]] = { model: pm, line: L(i), name: m[1] };
+      res.order.push({ kind: "ELEMENT", key: m[1], canon: `ELEMENT ${m[1]} ${pm.canon}`, line: L(i) });
+      i += m[0].length; continue;
+    }
+    if (src.startsWith("<!ATTLIST", i)) {
+      const re = /<!ATTLIST\s+([^\s>]+)\s+([\s\S]*?)\s*>/y; re.lastIndex = i;
+      const m = re.exec(src);
+      if (!m) return fail(i, "Объявление <!ATTLIST …> записано неверно: нужны имя элемента, имя атрибута, тип и обязательность");
+      const el = m[1], body = m[2], base = i;
+      const bodyStart = src.indexOf(body, i + 9 + m[1].length);
+      let p = 0;
+      const rest = () => body.slice(p);
+      const skip = () => { while (p < body.length && /\s/.test(body[p])) p++; };
+      skip();
+      if (p >= body.length) return fail(i, `У <!ATTLIST ${el} …> не описан ни один атрибут`);
+      while (p < body.length) {
+        const at = p;
+        const an = /^[^\s]+/.exec(rest());
+        const aname = an[0]; p += aname.length; skip();
+        const lineHere = L(bodyStart + at);
+        if (!NAME_RE.test(aname)) return fail(bodyStart + at, `Недопустимое имя атрибута «${aname}» в <!ATTLIST ${el} …>`);
+        let type = null;
+        if (body[p] === "(") {
+          const e = body.indexOf(")", p);
+          if (e === -1) return fail(bodyStart + p, `У атрибута ${aname} не закрыт список значений: не хватает )`);
+          type = "(" + body.slice(p + 1, e).split("|").map(x => x.trim()).join("|") + ")";
+          p = e + 1;
+        } else {
+          const tm = /^[^\s]+/.exec(rest());
+          if (!tm || !ATYPES.includes(tm[0])) return fail(bodyStart + p, `У атрибута ${aname} (элемент ${el}) неизвестный тип «${tm ? tm[0] : ""}». Подойдут: CDATA, ID, IDREF, NMTOKEN…`);
+          type = tm[0]; p += tm[0].length;
+        }
+        skip();
+        let def = null;
+        const dm = /^(#REQUIRED|#IMPLIED|#FIXED\s+("[^"]*"|'[^']*')|"[^"]*"|'[^']*')/.exec(rest());
+        if (!dm) return fail(bodyStart + p, `У атрибута ${aname} (элемент ${el}) не указана обязательность: нужно #REQUIRED, #IMPLIED, #FIXED "…" или значение по умолчанию`);
+        def = dm[1].replace(/\s+/g, " ");
+        const fixed = /^#FIXED\s+["'](.*)["']$/.exec(def);
+        p += dm[0].length; skip();
+        const rec = { el, name: aname, type, def, line: lineHere, fixed: fixed ? fixed[1] : null };
+        if (!res.attrsBy[el]) res.attrsBy[el] = {};
+        if (!res.attrsBy[el][aname]) {
+          res.attrsBy[el][aname] = rec;
+          res.attrs.push(rec);
+          res.order.push({ kind: "ATTLIST", key: `${el}.${aname}`, canon: `ATTLIST ${el} ${aname} ${type} ${def}`, line: lineHere });
+        }
+      }
+      i += m[0].length; continue;
+    }
+    if (src.startsWith("<!ENTITY", i)) {
+      const re = /<!ENTITY\s+([^\s>%]+)\s+("[^"]*"|'[^']*')\s*>/y; re.lastIndex = i;
+      const re2 = /<!ENTITY\s+([^\s>%]+)\s+SYSTEM\s+("[^"]*"|'[^']*')\s*>/y; re2.lastIndex = i;
+      const m = re.exec(src) || re2.exec(src);
+      if (!m) return fail(i, "Объявление <!ENTITY …> записано неверно: нужны имя и значение в кавычках, например <!ENTITY ithub \"ItHub college\">");
+      if (!NAME_RE.test(m[1])) return fail(i, `Недопустимое имя сущности «${m[1]}»`);
+      if (!res.entities[m[1]]) {
+        const val = m[2].slice(1, -1);
+        res.entities[m[1]] = { value: val, line: L(i) };
+        res.order.push({ kind: "ENTITY", key: m[1], canon: `ENTITY ${m[1]} "${val}"`, line: L(i) });
+      }
+      i += m[0].length; continue;
+    }
+    const frag = src.slice(i, i + 24).split("\n")[0];
+    return fail(i, `Здесь должно быть объявление, начинающееся с <!ELEMENT, <!ATTLIST или <!ENTITY, а найдено: «${frag}»`);
+  }
+  return res;
+}
+
+/* ---------- проверка документа по DTD ---------- */
+function validateDoc(doc, dtd) {
+  const errors = [];
+  const E = (line, msg) => errors.push({ line, msg });
+  if (doc.doctype && doc.doctype.name !== doc.root.name)
+    E(1, `Имя в DOCTYPE («${doc.doctype.name}») не совпадает с корневым элементом («${doc.root.name}»). Регистр тоже важен.`);
+  const ids = new Map(), refs = [];
+  const walk = (el) => {
+    const decl = dtd.elements[el.name];
+    const kids = el.children.filter(c => c.type === "el");
+    const hasText = el.children.some(c => (c.type === "text" && /\S/.test(c.value)) || (c.type === "cdata" && c.value.length));
+    if (!decl) {
+      E(el.line, `Элемент <${el.name}> не описан в DTD`);
+    } else {
+      const m = decl.model;
+      if (m.kind === "EMPTY") {
+        if (kids.length || hasText) E(el.line, `Элемент <${el.name}> объявлен как EMPTY: внутри него не должно быть ни текста, ни элементов`);
+      } else if (m.kind === "text") {
+        if (kids.length) E(el.line, `В элементе <${el.name}> должен быть только текст, а внутри есть элемент <${kids[0].name}>`);
+      } else if (m.kind === "mixed") {
+        for (const k of kids) if (!m.allowed.includes(k.name)) E(k.line, `Элемент <${k.name}> нельзя вкладывать в <${el.name}>`);
+      } else if (m.kind === "children") {
+        if (hasText) E(el.line, `В элементе <${el.name}> не должно быть текста: по DTD внутри только элементы ${m.canon}`);
+        const seq = kids.map(k => k.name + " ").join("");
+        if (!modelRegex(m.ast).test(seq)) {
+          E(el.line, `Содержимое <${el.name}> не подходит под правило ${m.canon}: найдено ${kids.length ? kids.map(k => k.name).join(", ") : "пусто"}`);
+        }
+      }
+    }
+    const defs = dtd.attrsBy[el.name] || {};
+    for (const a of el.attrs) {
+      if (a.name === "xmlns" || a.name.startsWith("xmlns:")) continue;
+      const d = defs[a.name];
+      if (!d) { E(el.line, `Атрибут ${a.name} не описан в DTD для элемента <${el.name}>`); continue; }
+      const v = a.value;
+      if (d.type === "ID") {
+        if (!NAME_RE.test(v)) E(el.line, `Значение «${v}» атрибута ${a.name} не подходит для типа ID: оно должно начинаться с буквы (или _) и не содержать пробелов`);
+        else if (ids.has(v)) E(el.line, `Значение ID «${v}» уже использовано: ID не могут повторяться`);
+        else ids.set(v, el);
+      } else if (d.type === "IDREF") {
+        if (!NAME_RE.test(v)) E(el.line, `Значение «${v}» атрибута ${a.name} не подходит для типа IDREF: оно должно начинаться с буквы (или _)`);
+        else refs.push({ v, el, a });
+      } else if (d.type === "IDREFS") {
+        v.trim().split(/\s+/).forEach(x => refs.push({ v: x, el, a }));
+      } else if (d.type === "NMTOKEN") {
+        if (!NMTOKEN_RE.test(v)) E(el.line, `Значение «${v}» атрибута ${a.name} не подходит для типа NMTOKEN: пробелы и спецсимволы не допускаются`);
+      } else if (d.type[0] === "(") {
+        if (!d.type.slice(1, -1).split("|").includes(v)) E(el.line, `Значение «${v}» атрибута ${a.name} должно быть одним из ${d.type}`);
+      }
+      if (d.fixed !== null && v !== d.fixed) E(el.line, `Атрибут ${a.name} у <${el.name}> должен иметь значение «${d.fixed}»`);
+    }
+    for (const d of Object.values(defs)) {
+      if (d.def === "#REQUIRED" && !el.attrs.some(a => a.name === d.name))
+        E(el.line, `У элемента <${el.name}> нет обязательного атрибута ${d.name}`);
+    }
+    for (const c of el.children) {
+      if (c.type === "text") {
+        const r = /&([^;\s&]+);/g; let mm;
+        while ((mm = r.exec(c.value))) {
+          const nm = mm[1];
+          if (!(nm[0] === "#" || PREDEF_ENT.includes(nm) || dtd.entities[nm])) E(c.line, `Сущность &${nm}; не объявлена в DTD`);
+        }
+      }
+      if (c.type === "el") walk(c);
+    }
+  };
+  walk(doc.root);
+  for (const r of refs) if (!ids.has(r.v)) E(r.el.line, `Ссылка «${r.v}» в атрибуте ${r.a.name} ведёт в никуда: нет элемента с таким ID`);
+  return errors;
+}
+
+/* ---------- канонические формы для сравнения ---------- */
+const normText = (s) => s.replace(/\s+/g, " ").trim();
+function canonDTD(dtd) {
+  // порядок объявлений не важен: сортируем; у каждого — строка в исходном тексте
+  return dtd.order.slice().sort((a, b) => (a.canon < b.canon ? -1 : a.canon > b.canon ? 1 : 0))
+    .map(o => ({ t: o.canon, line: o.line, kind: o.kind, key: o.key }));
+}
+function canonXML(doc) {
+  const head = [];
+  if (doc.decl) head.push({ t: `xml version=${doc.decl.version} encoding=${(doc.decl.encoding || "").toLowerCase()}`, line: 1 });
+  let dtdLines = [];
+  if (doc.doctype) {
+    head.push({ t: `DOCTYPE ${doc.doctype.name}${doc.doctype.system ? ` SYSTEM "${doc.doctype.system}"` : ""}${doc.doctype.publicId ? ` PUBLIC "${doc.doctype.publicId}"` : ""}`, line: 2 });
+    if (doc.doctype.subset !== null) {
+      const d = parseDTD(doc.doctype.subset, doc.doctype.subsetLine);
+      if (!d.ok) return { ok: false, line: d.line, msg: d.msg };
+      dtdLines = canonDTD(d);
+    }
+  }
+  const tree = [];
+  const walk = (el, depth) => {
+    const at = el.attrs.slice().sort((a, b) => (a.name < b.name ? -1 : 1)).map(a => `${a.name}="${normText(a.value)}"`).join(" ");
+    tree.push({ t: "  ".repeat(depth) + `<${el.name}${at ? " " + at : ""}>`, line: el.line });
+    for (const c of el.children) {
+      if (c.type === "el") walk(c, depth + 1);
+      else if (c.type === "text") { const v = normText(c.value); if (v) tree.push({ t: "  ".repeat(depth + 1) + v, line: c.line }); }
+      else if (c.type === "cdata") tree.push({ t: "  ".repeat(depth + 1) + `<![CDATA[${c.value.trim()}]]>`, line: c.line });
+      else if (c.type === "comment") tree.push({ t: "  ".repeat(depth + 1) + `<!--${normText(c.value)}-->`, line: c.line });
+    }
+  };
+  walk(doc.root, 0);
+  return { ok: true, head, dtd: dtdLines, tree };
+}
+
+function describeDtdItem(it) {
+  if (it.kind === "ELEMENT") return `<!ELEMENT ${it.key} …>`;
+  if (it.kind === "ATTLIST") return `<!ATTLIST ${it.key.split(".")[0]} ${it.key.split(".")[1]} …>`;
+  return `<!ENTITY ${it.key} …>`;
+}
+function compareDtdLists(stu, exp) {
+  const expSet = new Set(exp.map(x => x.t)), stuSet = new Set(stu.map(x => x.t));
+  const extra = stu.find(x => !expSet.has(x.t));
+  if (extra) return { ok: false, msg: `✗ Пока не совпадает. Проверьте строку ${extra.line}: ${describeDtdItem(extra)} записано не так, как в образце (или такого правила в образце нет).` };
+  const miss = exp.find(x => !stuSet.has(x.t));
+  if (miss) return { ok: false, msg: `✗ Пока не совпадает. Не хватает правила: ${describeDtdItem(miss)}` };
+  if (stu.length !== exp.length) return { ok: false, msg: "✗ Пока не совпадает. Какое-то правило записано дважды." };
+  return { ok: true };
+}
+function compareTreeLists(stu, exp) {
+  for (let k = 0; k < Math.max(stu.length, exp.length); k++) {
+    if (!stu[k]) return { ok: false, msg: `✗ Пока не совпадает. Похоже, вы остановились раньше: после строки ${stu.length ? stu[stu.length - 1].line : 1} чего-то не хватает.` };
+    if (!exp[k]) return { ok: false, msg: `✗ Пока не совпадает. В конце есть лишнее — проверьте строку ${stu[k].line}.` };
+    if (stu[k].t !== exp[k].t) return { ok: false, msg: `✗ Пока не совпадает. Проверьте строку ${stu[k].line}: «${stu[k].t.trim()}» — сравните с образцом.` };
+  }
+  return { ok: true };
+}
+
+/* ---------- проверка «напечатайте по образцу» ---------- */
+function checkTyped(ch, raw) {
+  if (!raw.trim()) return { ok: false, msg: "✗ Поле пустое. Впишите код из образца." };
+  if (ch.mode === "dtd") {
+    const s = parseDTD(raw), e = parseDTD(ch.code);
+    if (!s.ok) return { ok: false, msg: `✗ Ошибка в DTD, строка ${s.line}: ${s.msg}` };
+    return compareDtdLists(canonDTD(s), canonDTD(e));
+  }
+  const s = parseXML(raw);
+  if (!s.ok) return { ok: false, msg: `✗ Документ не well-formed. Строка ${s.line}: ${s.msg}` };
+  const e = parseXML(ch.code);
+  const cs = canonXML(s);
+  if (!cs.ok) return { ok: false, msg: `✗ Ошибка в DTD внутри документа, строка ${cs.line}: ${cs.msg}` };
+  const ce = canonXML(e);
+  if (cs.head.length < ce.head.length) return { ok: false, msg: "✗ Пока не совпадает. В начале документа не хватает строки: пролога <?xml …?> или DOCTYPE." };
+  if (cs.head.length > ce.head.length) return { ok: false, msg: "✗ Пока не совпадает. В начале документа есть лишняя строка (пролог или DOCTYPE), которой нет в образце." };
+  const h = compareTreeLists(cs.head, ce.head);
+  if (!h.ok) return { ok: false, msg: `✗ Пока не совпадает. Проверьте первые строки документа (пролог или DOCTYPE), строка ${cs.head[0] ? cs.head.find((x, i) => x.t !== ce.head[i].t).line : 1}.` };
+  const d = compareDtdLists(cs.dtd, ce.dtd);
+  if (!d.ok) return d;
+  return compareTreeLists(cs.tree, ce.tree);
+}
+
+/* ---------- проверка вопросов с коротким ответом ---------- */
+function normAnswer(s) {
+  return String(s).trim().toLowerCase().replace(/ё/g, "е").replace(/\s+/g, " ").replace(/[.!]+$/g, "");
+}
+const SET_SYN = { "xml schema": "xsd", "xmlschema": "xsd", "schema": "xsd", "xml-schema": "xsd" };
+function checkCalc(ch, raw) {
+  const answers = (ch.answers || [ch.answer]).map(String);
+  if (ch.set) {
+    const toks = String(raw).split(/[,;\/]+/).map(x => normAnswer(x)).filter(Boolean).map(x => SET_SYN[x] || x);
+    const want = answers.map(x => normAnswer(x)).sort();
+    const got = Array.from(new Set(toks)).sort();
+    return { ok: got.length === want.length && got.every((x, k) => x === want[k]), msg: "✗ Пока не то. Проверьте список: нужны все элементы, без лишних." };
+  }
+  const numeric = answers.every(a => /^-?[0-9.]+$/.test(a.trim()));
+  if (numeric) {
+    const stripped = String(raw).replace(/[^0-9.\-]/g, "");
+    const ok = stripped !== "" && answers.some(a => parseFloat(stripped) === parseFloat(a));
+    return { ok, msg: "✗ Пока не то. Проверьте ещё раз (нужно число)." };
+  }
+  const v = normAnswer(raw);
+  return { ok: v !== "" && answers.some(a => normAnswer(a) === v), msg: "✗ Пока не то. Проверьте ещё раз." };
+}
+
+/* ---------- составление «с нуля»: проверка по требованиям ---------- */
+const SHOP_DTD_REQ = [
+  { key: "shop", kind: "ELEMENT", ok: ["ELEMENT shop (customers,orders)"], hint: "shop: один customers и один orders (по порядку)" },
+  { key: "customers", kind: "ELEMENT", ok: ["ELEMENT customers (customer+)"], hint: "customers: минимум один customer" },
+  { key: "orders", kind: "ELEMENT", ok: ["ELEMENT orders (order+)"], hint: "orders: минимум один order" },
+  { key: "customer", kind: "ELEMENT", ok: ["ELEMENT customer (name,phone?)"], hint: "customer: один name и необязательный phone (не больше одного)" },
+  { key: "order", kind: "ELEMENT", ok: ["ELEMENT order (date,item*)"], hint: "order: один date и любое число item (можно ни одного)" },
+  { key: "name", kind: "ELEMENT", ok: ["ELEMENT name (#PCDATA)"], hint: "name: текст" },
+  { key: "phone", kind: "ELEMENT", ok: ["ELEMENT phone (#PCDATA)"], hint: "phone: текст" },
+  { key: "date", kind: "ELEMENT", ok: ["ELEMENT date (#PCDATA)"], hint: "date: текст" },
+  { key: "item", kind: "ELEMENT", ok: ["ELEMENT item (#PCDATA)"], hint: "item: текст" },
+  { key: "customer.id", kind: "ATTLIST", ok: ["ATTLIST customer id ID #REQUIRED"], hint: "у customer обязательный уникальный атрибут id" },
+  { key: "order.no", kind: "ATTLIST", ok: ["ATTLIST order no NMTOKEN #REQUIRED", "ATTLIST order no CDATA #REQUIRED"], hint: "у order обязательный атрибут no (число)" },
+  { key: "order.customer", kind: "ATTLIST", ok: ["ATTLIST order customer IDREF #REQUIRED"], hint: "у order обязательный атрибут customer — ссылка на id" },
+  { key: "item.qty", kind: "ATTLIST", ok: ["ATTLIST item qty CDATA #IMPLIED", "ATTLIST item qty NMTOKEN #IMPLIED"], hint: "у item необязательный атрибут qty" }
+];
+function checkShopDtd(raw) {
+  if (!raw.trim()) return { ok: false, msg: "✗ Поле пустое. Напишите DTD по требованиям выше." };
+  const d = parseDTD(raw);
+  if (!d.ok) return { ok: false, msg: `✗ Ошибка в DTD, строка ${d.line}: ${d.msg}` };
+  const got = {};
+  for (const o of d.order) got[o.key] = o;
+  const reqKeys = new Set(SHOP_DTD_REQ.map(r => r.key));
+  const extra = d.order.find(o => !reqKeys.has(o.key));
+  if (extra) return { ok: false, msg: `✗ Лишнее объявление в строке ${extra.line}: ${describeDtdItem(extra)} — в условии такого нет.` };
+  const bad = [], missing = [];
+  for (const r of SHOP_DTD_REQ) {
+    const g = got[r.key];
+    if (!g) missing.push(r.hint);
+    else if (!r.ok.includes(g.canon)) bad.push({ r, g });
+  }
+  if (bad.length) return { ok: false, msg: `✗ Строка ${bad[0].g.line}: правило не совпадает с условием — «${bad[0].r.hint}».` };
+  if (missing.length) return { ok: false, msg: `✗ Ещё не описано: ${missing[0]}${missing.length > 1 ? ` (и ещё: ${missing.length - 1})` : ""}.` };
+  return { ok: true };
+}
+function checkShopXml(raw) {
+  if (!raw.trim()) return { ok: false, msg: "✗ Поле пустое. Напишите XML-документ." };
+  const doc = parseXML(raw);
+  if (!doc.ok) return { ok: false, msg: `✗ Документ не well-formed. Строка ${doc.line}: ${doc.msg}` };
+  if (!doc.decl) return { ok: false, msg: "✗ Первой строкой нужна XML-декларация: <?xml version=\"1.0\" encoding=\"UTF-8\"?>" };
+  if (!doc.doctype || doc.doctype.system !== "shop.dtd") return { ok: false, msg: "✗ Второй строкой подключите внешний DTD: <!DOCTYPE shop SYSTEM \"shop.dtd\">" };
+  const dtd = parseDTD(SHOP_DTD_REFERENCE);
+  const errs = validateDoc(doc, dtd);
+  if (errs.length) return { ok: false, msg: `✗ Документ не соответствует DTD. Строка ${errs[0].line}: ${errs[0].msg}` };
+  const els = (nm) => { const out = []; (function w(e) { for (const c of e.children) if (c.type === "el") { if (c.name === nm) out.push(c); w(c); } })(doc.root); return out; };
+  const customers = els("customer"), orders = els("order");
+  if (customers.length < 2) return { ok: false, msg: "✗ Нужно не меньше двух покупателей (customer)." };
+  if (orders.length < 2) return { ok: false, msg: "✗ Нужно не меньше двух заказов (order)." };
+  if (!customers.some(c => c.children.some(k => k.type === "el" && k.name === "phone"))) return { ok: false, msg: "✗ Хотя бы у одного покупателя должен быть телефон (phone)." };
+  if (!customers.some(c => !c.children.some(k => k.type === "el" && k.name === "phone"))) return { ok: false, msg: "✗ Хотя бы у одного покупателя телефона быть не должно — так вы проверите «?»." };
+  const itemsOf = (o) => o.children.filter(k => k.type === "el" && k.name === "item").length;
+  if (!orders.some(o => itemsOf(o) === 0)) return { ok: false, msg: "✗ Хотя бы один заказ должен быть без товаров — так вы проверите «*» (ноль и больше)." };
+  if (!orders.some(o => itemsOf(o) >= 2)) return { ok: false, msg: "✗ Хотя бы в одном заказе должно быть два и больше товаров." };
+  for (const o of orders) {
+    const no = o.attrs.find(a => a.name === "no");
+    if (!/^[0-9]+$/.test(no.value)) return { ok: false, msg: `✗ Строка ${o.line}: no должно быть числом, а здесь «${no.value}».` };
+  }
+  const custIds = new Set(customers.map(c => c.attrs.find(a => a.name === "id").value));
+  const used = new Set(orders.map(o => o.attrs.find(a => a.name === "customer").value));
+  if (used.size < 2 && custIds.size >= 2) return { ok: false, msg: "✗ Пусть заказы ссылаются на разных покупателей — так проверка ссылок будет честной." };
+  return { ok: true };
+}
+const SHOP_DTD_REFERENCE = `<!ELEMENT shop (customers, orders)>
+<!ELEMENT customers (customer+)>
+<!ELEMENT orders (order+)>
+<!ELEMENT customer (name, phone?)>
+<!ELEMENT order (date, item*)>
+<!ELEMENT name (#PCDATA)>
+<!ELEMENT phone (#PCDATA)>
+<!ELEMENT date (#PCDATA)>
+<!ELEMENT item (#PCDATA)>
+<!ATTLIST customer id ID #REQUIRED>
+<!ATTLIST order no NMTOKEN #REQUIRED customer IDREF #REQUIRED>
+<!ATTLIST item qty CDATA #IMPLIED>`;
+const COMPOSE_CHECKERS = { shopDtd: checkShopDtd, shopXml: checkShopXml };
+
+if (typeof module !== "undefined") {
+  module.exports = { parseXML, parseDTD, parseModel, modelRegex, validateDoc, canonXML, canonDTD, checkTyped, checkCalc,
+    checkShopDtd, checkShopXml, SHOP_DTD_REFERENCE, normText };
+}
+
+/* ============================ ДАННЫЕ ЧАСТЕЙ ============================ */
+// k() — «клавиша»/код в тексте; cb() — блок кода, который нельзя выделить и скопировать
+const k = (s) => '<span class="kbd">' + escapeHtml(s) + '</span>';
+
+const PARTS = [
+{
+  id: 0, tag: "Старт", title: "Что мы делаем",
+  html: `
+    <p>Это практикум по дисциплине «XML технологии»: от первого документа до собственного DTD с проверкой.
+    Мы пройдём темы курса по порядку: правила дисциплины, обзор XML-технологий, правила XML и DTD.</p>
+    <div class="step"><div class="num">1</div><div class="txt">Каждая часть начинается с короткой теории — прочитайте её.</div></div>
+    <div class="step"><div class="num">2</div><div class="txt">Дальше идут задания. <b>Код нельзя скопировать</b> — его нужно набрать самому, как на настоящем занятии.</div></div>
+    <div class="step"><div class="num">3</div><div class="txt">Есть вопросы с коротким ответом (число или слово): ответ нигде не показан, его нужно понять или посчитать. А в конце вы составите DTD и XML <b>с нуля</b> по описанию.</div></div>
+    <div class="step"><div class="num">4</div><div class="txt">Часть засчитывается, когда решены все её задания. Тогда открывается следующая.</div></div>
+    <div class="callout info"><span class="ct">Как проверяет практикум</span>Ваш XML читается так же строго, как это делает настоящий парсер: если документ не well-formed, вы увидите строку и причину. Для DTD проверяются и сами правила, и соответствие им документа.</div>
+    <div class="callout warn"><span class="ct">Работайте в двух окнах</span>Держите рядом VS Code и набирайте каждый пример ещё и там: расширение XML подчеркнёт ошибки красным. Так вы тренируете именно тот навык, который нужен на контрольных точках.</div>
+  `,
+  challenges: []
+},
+{
+  id: 1, tag: "Часть 1", title: "Правила дисциплины",
+  html: `
+    <p>Дисциплина «XML технологии» идёт от синтаксиса XML к DTD, XML Schema, XPath и XSLT. Оценивают работу по БРС —
+    балльно-рейтинговой системе, а контрольных точек в дисциплине четыре.</p>
+    <h3>Что и как сдаётся</h3>
+    <ul>
+      <li>Сдаётся <b>код</b> XML, DTD, XSD или XSLT — ссылкой на онлайн-код, репозиторий или вставкой в ответ.</li>
+      <li>Архивы и вложенные файлы <b>не принимаются</b>: преподаватель должен открыть и проверить код без дополнительных файлов.</li>
+      <li>Все действия выполняются в <b>Windows</b>, поэтому инструменты лучше подготовить заранее.</li>
+      <li>Работа, сданная позже срока, ограничивается проходным минимумом — сдавайте к концу занятия.</li>
+      <li>Перед отправкой запускайте валидатор: без проверки код может оказаться синтаксически неверным.</li>
+    </ul>
+  `,
+  challenges: [
+    { calc: true, question: "Из скольких контрольных точек состоит дисциплина? (введите число)", answer: "4",
+      why: "Зная структуру оценки заранее, вы не пропустите срок сдачи.", note: "Смотрите первый абзац теории." },
+    { calc: true, question: "Можно ли сдать ответ вложенным архивом? Введите: да или нет", answer: "нет",
+      why: "Формат сдачи должен позволять открыть и проверить код без дополнительных файлов.", note: "Принимаются ссылка на онлайн-код, репозиторий или вставленный код." },
+    { calc: true, question: "В какой операционной системе выполняются все действия по дисциплине? (одно слово)", answers: ["windows", "виндовс", "винда"],
+      why: "Одинаковое окружение — одинаковые результаты проверки.", note: "Это написано в списке «Что и как сдаётся»." },
+    { calc: true, set: true, question: "Назовите четыре технологии, которые идут в курсе после синтаксиса XML. Введите через запятую, в любом порядке.", answers: ["dtd", "xsd", "xpath", "xslt"],
+      why: "Это карта всего курса: к ней вы будете возвращаться на каждой теме.", note: "XML Schema можно записать как XSD или как «XML Schema»." }
+  ]
+},
+{
+  id: 2, tag: "Часть 2", title: "Рабочее место: VS Code",
+  html: `
+    <p>Рабочее место готово, если вы можете написать XML и сразу его проверить. Настроим VS Code.</p>
+    <div class="step"><div class="num">1</div><div class="txt">Создайте на компьютере папку ${k("xml-practicum")} — латиницей, без пробелов.</div></div>
+    <div class="step"><div class="num">2</div><div class="txt">Запустите VS Code → <span class="btn-tag">File</span> → <span class="btn-tag">Open Folder…</span> → выберите папку. Так VS Code видит все файлы проекта.</div></div>
+    <div class="step"><div class="num">3</div><div class="txt">Откройте панель <span class="btn-tag">Extensions</span> (${k("Ctrl+Shift+X")}), найдите расширение <b>XML</b> от Red Hat и нажмите <span class="btn-tag">Install</span>.</div></div>
+    <div class="step"><div class="num">4</div><div class="txt">Наведите курсор на название папки в панели Explorer → значок <span class="btn-tag">New File</span> → имя ${k("hello.xml")}.</div></div>
+    <div class="callout info"><span class="ct">Зачем это нужно</span>Без расширения VS Code видит в XML просто текст. С ним — подчёркивает ошибки красной волнистой линией, а панель Problems (${k("Ctrl+Shift+M")}) собирает их в список.</div>
+    <p>Теперь наберите первый документ.</p>
+  `,
+  challenges: [
+    { filename: "hello.xml", mode: "xml",
+      why: "Пролог сообщает версию и кодировку, а корневой элемент — единственный элемент верхнего уровня, в который вложено всё остальное.",
+      code: `<?xml version="1.0" encoding="UTF-8"?>
+<greeting>Привет, XML!</greeting>`,
+      note: "Две строки: пролог и корневой элемент с текстом внутри." }
+  ],
+  after: `
+    <div class="step"><div class="num">5</div><div class="txt">Наберите тот же код в ${k("hello.xml")} в VS Code и сохраните (${k("Ctrl+S")}). Панель Problems должна быть пустой.</div></div>
+    <div class="step"><div class="num">6</div><div class="txt">Удалите закрывающий тег ${k("</greeting>")} — появится красная линия и запись в Problems. Верните тег на место.</div></div>
+    <div class="callout ok"><span class="ct">Проверка</span>Если ошибка появилась и исчезла вместе с вашей правкой — проверка в VS Code работает. Это главный инструмент для всех следующих частей.</div>
+  `
+},
+{
+  id: 3, tag: "Часть 3", title: "XML как общий язык данных",
+  html: `
+    <p>XML — расширяемый формат для хранения и передачи структурированных данных. Одна и та же идея разметки лежит
+    в основе множества форматов: в новостях, офисных документах и веб-сервисах.</p>
+    <table class="t">
+      <tr><th>Формат</th><th>Для чего используется</th><th>Что хранит</th></tr>
+      <tr><td><b>RSS</b></td><td>распространение новостей и блогов</td><td>ленты обновлений</td></tr>
+      <tr><td><b>RDF</b></td><td>описание ресурсов</td><td>связанные сведения о ресурсах</td></tr>
+      <tr><td><b>SOAP</b></td><td>обмен сообщениями</td><td>запросы и ответы веб-сервисов</td></tr>
+      <tr><td><b>WSDL</b></td><td>описание веб-сервисов</td><td>операции и способы вызова</td></tr>
+      <tr><td><b>SVG</b></td><td>векторная графика</td><td>фигуры и графические элементы</td></tr>
+      <tr><td><b>XBRL</b></td><td>отчётность</td><td>финансовые и бизнес-данные</td></tr>
+      <tr><td><b>FB2, EPUB</b></td><td>электронные книги</td><td>текст книги и её структура</td></tr>
+      <tr><td><b>DOCX, XLSX</b></td><td>офисные документы</td><td>XML внутри привычных файлов</td></tr>
+    </table>
+    <div class="callout info"><span class="ct">Синтаксис и семантика</span>XML задаёт общий синтаксис, а предметный стандарт уточняет смысл элементов. Тег ${k("title")} в RSS — заголовок записи, а в другом формате может значить другое. Поэтому нужно знать и синтаксис XML, и правила конкретного стандарта.</div>
+    <p>Соберём мини-ленту новостей в формате RSS.</p>
+  `,
+  challenges: [
+    { filename: "rss.xml", mode: "xml",
+      why: "Новостные ленты сайтов — это обычные XML-документы: канал (channel) и записи (item) внутри него.",
+      code: `<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+  <channel>
+    <title>Новости ITHUB</title>
+    <item>
+      <title>Начался курс XML</title>
+    </item>
+  </channel>
+</rss>`,
+      note: "Обратите внимание: в документе два элемента title, но у них разный смысл — заголовок канала и заголовок записи." },
+    { calc: true, question: "Сколько элементов title в документе rss.xml выше? (число)", answer: "2",
+      why: "Один и тот же тег живёт в разных местах документа — смысл определяет то, где он стоит.", note: "Считайте все title, в том числе вложенные." },
+    { calc: true, question: "Тег title в RSS и в другом формате называется одинаково, но значит разное. Что у них различается: синтаксис или семантика? (одно слово)", answer: "семантика",
+      why: "Синтаксис XML общий для всех форматов — различается смысл элементов.", note: "Вспомните врезку «Синтаксис и семантика» выше." }
+  ],
+  after: `<p>А теперь докажем, что картинка — тоже XML-документ. Наберите SVG-рисунок.</p>`,
+  challenges2: [
+    { filename: "circle.svg", mode: "xml",
+      why: "SVG — векторная графика в виде XML: фигуры описываются элементами, а их размеры и цвета — атрибутами. Вместо пространства имён по умолчанию здесь указан адрес стандарта SVG.",
+      code: `<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100">
+  <circle cx="50" cy="50" r="40" fill="orange"/>
+</svg>`,
+      note: "Атрибуты пишутся в кавычках. Элемент circle — пустой, поэтому закрыт сразу: />." }
+  ],
+  after2: `
+    <div class="callout ok"><span class="ct">Попробуйте в VS Code</span>Сохраните этот код в файл ${k("circle.svg")} и откройте его в браузере (перетащите файл в окно браузера). Вы увидите оранжевый круг.</div>
+    <h3>Вопросы на закрепление</h3>
+  `,
+  challenges3: [
+    { calc: true, question: "Какой XML-формат используют для распространения новостей и блогов? (аббревиатура)", answer: "rss", why: "Форматы отвечают на разные задачи.", note: "Смотрите таблицу выше." },
+    { calc: true, question: "Какой формат описывает веб-сервисы: их операции и способы вызова? (аббревиатура)", answer: "wsdl", why: "WSDL описывает сервис, а SOAP — сообщения, которыми с ним обмениваются.", note: "Не путайте с SOAP — тот про обмен сообщениями." },
+    { calc: true, question: "Какой формат нужен для финансовой и бизнес-отчётности? (аббревиатура)", answer: "xbrl", why: "Отчётность — отдельная предметная область со своим набором XML-правил.", note: "Смотрите таблицу выше." }
+  ]
+},
+{
+  id: 4, tag: "Часть 4", title: "HTML и XML: разная задача",
+  html: `
+    <p>HTML отвечает на вопросы «из чего состоит страница» и «как её показать». XML — на другие: «что означают данные»
+    и «как они связаны между собой».</p>
+    <table class="t">
+      <tr><th></th><th>HTML</th><th>XML</th></tr>
+      <tr><td><b>Главная цель</b></td><td>отобразить страницу</td><td>описать данные</td></tr>
+      <tr><td><b>Теги</b></td><td>заранее определены стандартом</td><td>определяются автором или форматом</td></tr>
+      <tr><td><b>Ошибки</b></td><td>страница может терпеть ошибки</td><td>требуется строгая корректность</td></tr>
+    </table>
+    <div class="callout info"><span class="ct">Три уровня языка разметки</span><b>Синтаксис</b> — как записаны теги и атрибуты. <b>Грамматика</b> — что во что вложено. <b>Семантика</b> — что элемент означает. В HTML ${k("<b>")} и ${k("<strong>")} оба делают текст жирным, но ${k("<strong>")} означает «важно».</div>
+    <p>XML строже, потому что его обрабатывают программы, а программа не умеет «догадываться».</p>
+  `,
+  challenges: [
+    { filename: "person.xml", mode: "xml",
+      why: "Здесь теги называют смысл данных — имя и адрес, — а не то, как их показать на экране.",
+      code: `<person>
+  <name>Иван Петров</name>
+  <address>ул. Ленина, 5</address>
+</person>`,
+      note: "Пролога нет — это допустимо. Но с ним документ читают надёжнее: в следующих заданиях он появится." },
+    { calc: true, question: "Какой язык описывает ЗНАЧЕНИЕ данных, а не внешний вид: HTML или XML? (введите название)", answer: "xml",
+      why: "В этом главное отличие двух языков.", note: "Вспомните таблицу выше." },
+    { calc: true, question: "Элемент <price>250</price> в XML задаёт красный цвет текста? Введите: да или нет", answer: "нет",
+      why: "XML не говорит, как показывать данные — он говорит, что они означают.", note: "Внешний вид — отдельная задача, её решают другими средствами." },
+    { calc: true, question: "Какой из тегов HTML — смысловой, «важно»: b или strong? (введите тег)", answer: "strong",
+      why: "Семантика отличает теги, которые выглядят одинаково.", note: "Прочитайте врезку «Три уровня языка разметки»." }
+  ]
+},
+{
+  id: 5, tag: "Часть 5", title: "Из чего состоит XML-документ",
+  html: `
+    <table class="t">
+      <tr><th>Часть</th><th>Пример</th><th>Что делает</th></tr>
+      <tr><td><b>Пролог</b></td><td>${k('<?xml version="1.0"?>')}</td><td>версия XML и кодировка; в самом начале файла</td></tr>
+      <tr><td><b>Корневой элемент</b></td><td>${k("<pricelist>…</pricelist>")}</td><td>единственный элемент верхнего уровня</td></tr>
+      <tr><td><b>Элемент</b></td><td>${k("<title>XML</title>")}</td><td>хранит данные или структуру</td></tr>
+      <tr><td><b>Атрибут</b></td><td>${k('<book id="1">')}</td><td>задаёт свойство элемента</td></tr>
+      <tr><td><b>Комментарий</b></td><td>${k("<!-- First book -->")}</td><td>поясняет код и не является данными</td></tr>
+    </table>
+    <p>Соберём документ из всех этих частей — это файл ${k("demo-xml.xml")} из архива вашего курса.</p>
+  `,
+  challenges: [
+    { filename: "demo-xml.xml", mode: "xml",
+      why: "В этом маленьком документе есть все основные «кирпичики» XML: пролог, корень, элементы, атрибуты и комментарии.",
+      code: `<?xml version="1.0"?>
+<pricelist>
+  <!-- First book -->
+  <book id="1">
+    <title>XML and XSLT</title>
+    <author>John Smith</author>
+    <price>250</price>
+  </book>
+  <!-- Вторая книга -->
+  <book id="2">
+    <title>HTML 5</title>
+    <author>Иван Петров</author>
+    <price>300</price>
+  </book>
+</pricelist>`,
+      note: "Слева цифрами показаны номера строк — они понадобятся в вопросах ниже." },
+    { calc: true, question: "На какой строке образца выше стоит второй комментарий? (число)", answer: "9",
+      why: "Умение быстро находить нужное место в документе пригодится при чтении сообщений об ошибках.", note: "Смотрите номера слева от кода." },
+    { calc: true, question: "Каково значение атрибута id у второй книги? (число)", answer: "2",
+      why: "Атрибут задаёт свойство конкретного элемента.", note: "Атрибут стоит в открывающем теге второго book." },
+    { calc: true, question: "Сколько всего элементов в документе, считая корневой? (число)", answer: "9",
+      why: "Считать структуру — значит понимать её.", note: "Один pricelist, два book и по три элемента внутри каждого book. Комментарии — не элементы." }
+  ]
+},
+{
+  id: 6, tag: "Часть 6", title: "Правила well-formed",
+  html: `
+    <p><b>Well-formed</b> («корректный») — документ, который парсер смог прочитать без синтаксической ошибки. Правил семь:</p>
+    <ol>
+      <li><b>Регистр.</b> ${k("<Title>")} и ${k("<title>")} — разные имена.</li>
+      <li><b>Имя элемента</b> начинается с буквы или подчёркивания.</li>
+      <li><b>Один корень</b> — единственный элемент верхнего уровня.</li>
+      <li><b>Вложенность.</b> Элементы не пересекаются: сначала закрывают внутренний, потом внешний.</li>
+      <li><b>Закрывающие теги.</b> У каждого элемента есть закрывающий тег (или запись ${k("<x/>")}).</li>
+      <li><b>Кавычки.</b> Значения атрибутов — в двойных или одинарных кавычках.</li>
+      <li><b>Уникальные атрибуты.</b> У одного элемента нет двух атрибутов с одним именем.</li>
+    </ol>
+    <div class="callout warn"><span class="ct">Парсер замечает ошибку не там, где вы её сделали</span>Если вы забыли закрыть тег, парсер обычно сообщит об ошибке позже — там, где он уткнулся в несоответствие. Учитесь искать причину выше указанной строки.</div>
+    <h3>Найдите ошибку</h3>
+    <p>В каждом документе одна ошибка. Введите номер строки, на которой она сделана.</p>
+  `,
+  challenges: [
+    { calc: true, question: "Документ 1: на какой строке ошибка? (число)", answer: "4", viewName: "doc1.xml", view: `<?xml version="1.0" encoding="UTF-8"?>
+<catalog>
+  <book>
+    <title>XML и XSLT</Title>
+  </book>
+</catalog>`,
+      why: "Ошибки в регистре — самые частые: для парсера title и Title — разные имена.", note: "Сравните открывающий и закрывающий теги посимвольно." },
+    { calc: true, question: "Документ 2: на какой строке ошибка? (число)", answer: "6", viewName: "doc2.xml", view: `<?xml version="1.0" encoding="UTF-8"?>
+<catalog>
+  <book id="1">
+    <title>HTML 5</title>
+  </book>
+  <book id=2>
+    <title>CSS</title>
+  </book>
+</catalog>`,
+      why: "Значения атрибутов в кавычках — обязательное правило, даже для чисел.", note: "Посмотрите на открывающие теги book." },
+    { calc: true, question: "Документ 3: на какой строке ошибка? (число)", answer: "3", viewName: "doc3.xml", view: `<?xml version="1.0" encoding="UTF-8"?>
+<name>Анна</name>
+<name>Борис</name>`,
+      why: "В документе может быть только один корневой элемент.", note: "Сколько элементов стоит на верхнем уровне?" },
+    { calc: true, question: "Документ 4: на какой строке забыт закрывающий тег? (число)", answer: "4", viewName: "doc4.xml", view: `<?xml version="1.0" encoding="UTF-8"?>
+<list>
+  <item>Хлеб</item>
+  <item>Молоко
+  <item>Сыр</item>
+</list>`,
+      why: "Парсер здесь сообщит об ошибке на строке 6 — но причина на другой строке. Умение искать причину, а не следствие, экономит часы.", note: "Найдите элемент, который открыт и не закрыт." }
+  ],
+  after: `<h3>Исправьте документ</h3><p>Перепечатайте документ, исправив в нём ошибку.</p>`,
+  challenges2: [
+    { filename: "исправьте: broken1.xml", mode: "xml",
+      shown: `<?xml version="1.0" encoding="UTF-8"?>
+<catalog>
+  <book id=1>
+    <title>XML и XSLT</title>
+    <price>250</price>
+  </book>
+</catalog>`,
+      code: `<?xml version="1.0" encoding="UTF-8"?>
+<catalog>
+  <book id="1">
+    <title>XML и XSLT</title>
+    <price>250</price>
+  </book>
+</catalog>`,
+      why: "Исправление ошибки — это то, чем вы будете заниматься при каждой проверке документа парсером.", note: "Одна правка — в открывающем теге book." },
+    { filename: "исправьте: broken2.xml", mode: "xml",
+      shown: `<?xml version="1.0" encoding="UTF-8"?>
+<order>
+  <customer>Анна</customer>
+  <total>1200
+</order>`,
+      code: `<?xml version="1.0" encoding="UTF-8"?>
+<order>
+  <customer>Анна</customer>
+  <total>1200</total>
+</order>`,
+      why: "Незакрытый тег — типичная ошибка, когда текст длинный.", note: "Закройте элемент сразу после его содержимого." }
+  ]
+},
+{
+  id: 7, tag: "Часть 7", title: "Кодировка и CDATA",
+  html: `
+    <h3>Кодировка</h3>
+    <p>Кодировка — способ представить символы байтами. Чтобы программа правильно прочитала русские буквы, её указывают в декларации:
+    ${k('<?xml version="1.0" encoding="utf-8"?>')}. Декларация только <b>сообщает</b> кодировку — сам файл нужно сохранить в той же
+    (в VS Code она показана справа внизу в строке состояния).</p>
+    <h3>CDATA</h3>
+    <p>Символ ${k("<")} начинает тег. Если он нужен как обычный текст, например в записи «2 &lt; 3», парсер запутается. Решения два:
+    заменить символ на ${k("&lt;")} или обернуть текст в секцию ${k("<![CDATA[ … ]]>")} — внутри неё всё считается просто текстом.</p>
+    <p>Сначала найдите ошибку.</p>
+  `,
+  challenges: [
+    { calc: true, question: "На какой строке ошибка? (число)", answer: "3", viewName: "note.xml", view: `<?xml version="1.0" encoding="UTF-8"?>
+<note>
+  <text>Проверка: 2 < 3</text>
+</note>`,
+      why: "Символ < в обычном тексте парсер принимает за начало тега.", note: "Ищите символ, который начинает тег там, где его быть не должно." },
+    { calc: true, question: "Символ < в тексте без CDATA — это нарушение well-formed или valid? (введите слово)", answers: ["well-formed", "wellformed", "well formed"],
+      why: "Well-formed отвечает на вопрос «можно ли документ прочитать», valid — на вопрос «соответствует ли он правилам DTD».", note: "Документ с такой ошибкой парсер не сможет прочитать вообще." },
+    { calc: true, question: "Если в декларации написано encoding=\"utf-8\", в какой кодировке нужно сохранить файл? (введите кодировку)", answers: ["utf-8", "utf8"],
+      why: "Кодировка в декларации и кодировка файла должны совпадать, иначе русские буквы превратятся в «кракозябры».", note: "В VS Code проверьте её справа внизу." }
+  ],
+  after: `<p>Теперь исправьте документ через CDATA.</p>`,
+  challenges2: [
+    { filename: "исправьте: note.xml", mode: "xml",
+      shown: `<?xml version="1.0" encoding="UTF-8"?>
+<note>
+  <text>Проверка: 2 < 3</text>
+</note>`,
+      code: `<?xml version="1.0" encoding="UTF-8"?>
+<note>
+  <text><![CDATA[Проверка: 2 < 3]]></text>
+</note>`,
+      why: "CDATA говорит парсеру: «всё внутри — просто текст».", note: "Оберните только содержимое элемента text, теги остаются снаружи." },
+    { filename: "note-cdata.xml", mode: "xml",
+      code: `<?xml version="1.0" encoding="UTF-8"?>
+<note><![CDATA[ 2 < 3 ]]></note>`,
+      why: "Секция CDATA пишется вместе с квадратными скобками — не потеряйте ни одной.", note: "Три открывающих символа: <![CDATA[ — и два закрывающих: ]]>." }
+  ]
+},
+{
+  id: 8, tag: "Часть 8", title: "Пространства имён",
+  html: `
+    <p>Когда в документе встречаются два тега ${k("title")} — название книги и заголовок SVG-картинки, — программа должна понимать, кто есть кто.
+    <b>Пространство имён</b> связывает имя элемента с уникальным идентификатором — URI.</p>
+    <table class="t">
+      <tr><th>Термин</th><th>Что означает</th></tr>
+      <tr><td><b>Пространство имён</b></td><td>уникальная область имён XML</td></tr>
+      <tr><td><b>URI</b></td><td>идентификатор пространства имён (адрес нужен как <i>имя</i>, а не как ссылка для скачивания)</td></tr>
+      <tr><td><b>Префикс</b></td><td>короткая метка перед именем элемента, например ${k("m:item")}</td></tr>
+    </table>
+    <p>Объявить пространство можно атрибутом ${k("xmlns")} (по умолчанию для элемента и всего вложенного) или ${k("xmlns:префикс")} (только для элементов с этим префиксом).</p>
+    <div class="callout warn"><span class="ct">Важно</span>URI сравниваются как обычные строки. Адреса ${k("http://ithub.ru/catalog/")} и ${k("http://ithub.ru/catalog")} — разные пространства имён.</div>
+  `,
+  challenges: [
+    { filename: "catalog-ns.xml", mode: "xml",
+      why: "Один документ, три пространства имён: по умолчанию (для catalog) и два с префиксами m и b.",
+      code: `<?xml version="1.0" encoding="UTF-8"?>
+<catalog xmlns="http://ithub.ru/catalog"
+         xmlns:m="http://ithub.ru/catalog/music"
+         xmlns:b="http://ithub.ru/catalog/books">
+  <m:item>
+    <title>Music</title>
+  </m:item>
+  <b:item>
+    <b:title>Book</b:title>
+  </b:item>
+</catalog>`,
+      note: "Атрибуты xmlns можно переносить на следующую строку — так документ читается лучше." },
+    { calc: true, question: "Сколько элементов в этом документе относятся к пространству имён http://ithub.ru/catalog/books ? (число)", answer: "2",
+      why: "Принадлежность определяет префикс — или его отсутствие.", note: "Посчитайте элементы с префиксом b." },
+    { calc: true, question: "Сколько всего РАЗНЫХ пространств имён (URI) используется в документе? (число)", answer: "3",
+      why: "Разные префиксы могут указывать на один и тот же URI, а один URI может стоять и под префиксом, и «по умолчанию».", note: "Посмотрите на три строки с xmlns." },
+    { calc: true, question: "К какому пространству имён относится элемент title внутри m:item? Введите последнее слово его адреса.", answer: "catalog",
+      why: "Префикс m не переходит на вложенные элементы: title без префикса берёт пространство по умолчанию.", note: "Какое пространство объявлено просто как xmlns?" },
+    { calc: true, question: "Одно и то же ли пространство имён http://ithub.ru/catalog/ (со слэшем) и http://ithub.ru/catalog (без слэша)? Введите: да или нет", answer: "нет",
+      why: "Ошибка из-за лишнего слэша — одна из самых частых при работе с пространствами имён.", note: "Вспомните врезку «Важно» выше." }
+  ],
+  after: `<p>А теперь — пространство имён по умолчанию, которое меняется внутри документа.</p>`,
+  challenges2: [
+    { filename: "catalog-lang.xml", mode: "xml",
+      why: "Объявление xmlns действует на элемент и всё вложенное в него, пока не появится новое объявление.",
+      code: `<?xml version="1.0" encoding="UTF-8"?>
+<catalog>
+  <book xmlns="http://ithub.ru/catalog/en">
+    <title>XML и EDGE</title>
+  </book>
+  <book xmlns="http://ithub.ru/catalog/ru">
+    <title>Dimanic HTML</title>
+  </book>
+</catalog>`,
+      note: "У catalog своего xmlns нет — запомните это для следующего вопроса." },
+    { calc: true, question: "Сколько элементов этого документа НЕ принадлежат ни одному пространству имён? (число)", answer: "1",
+      why: "Элемент без объявления пространства имён остаётся «ничьим» — так бывает и в реальных документах.", note: "Ищите элемент, до которого не дотянулось ни одно xmlns." }
+  ]
+},
+{
+  id: 9, tag: "Часть 9", title: "DTD: зачем он нужен",
+  html: `
+    <p>Документ может быть well-formed, но всё равно не подходить вашей системе: содержать неправильные данные или ошибки в структуре.
+    Для проверки грамматики документа и нужен <b>DTD</b> (Document Type Definition). Он описывает: какие элементы допустимы, сколько их,
+    какие у них атрибуты, обязательны ли они, и какие есть сущности.</p>
+    <table class="t">
+      <tr><th>Проверка</th><th>Что подтверждает</th><th>Пример ошибки</th></tr>
+      <tr><td><b>Well-formed</b></td><td>XML можно прочитать парсером</td><td>не закрыт тег</td></tr>
+      <tr><td><b>DTD-valid</b></td><td>XML соответствует DTD-грамматике</td><td>нет обязательного элемента</td></tr>
+    </table>
+    <h3>Как записывается</h3>
+    <p>DTD можно написать прямо в документе, между прологом и корнем: ${k("<!DOCTYPE имя-корня [ … ]>")}. Имя после DOCTYPE — имя корневого элемента.
+    Внутри скобок — правила. Правило элемента: ${k("<!ELEMENT имя (что внутри)>")}. Слово ${k("#PCDATA")} означает «просто текст».</p>
+    <p>Наберите самый простой документ с DTD.</p>
+  `,
+  challenges: [
+    { filename: "demo-1.xml", mode: "xml",
+      why: "Правила лежат прямо в документе, между квадратными скобками DOCTYPE. Корень root содержит один элемент element, а element — только текст.",
+      code: `<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE root [
+  <!ELEMENT root (element)>
+  <!ELEMENT element (#PCDATA)>
+]>
+<root>
+  <element>Содержимое</element>
+</root>`,
+      note: "Порядок объявлений внутри скобок не важен, но главное — чтобы у каждого элемента было своё правило." }
+  ],
+  after: `<p>Теперь — правило с несколькими вложенными элементами.</p>`,
+  challenges2: [
+    { filename: "demo-2.xml", mode: "xml",
+      why: "Запятая в скобках задаёт ПОРЯДОК: сначала title, потом author, потом price — и в XML они должны идти именно так.",
+      code: `<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE catalog [
+  <!ELEMENT catalog (book)>
+  <!ELEMENT book (title, author, price)>
+  <!ELEMENT title (#PCDATA)>
+  <!ELEMENT author (#PCDATA)>
+  <!ELEMENT price (#PCDATA)>
+]>
+<catalog>
+  <book>
+    <title>Название</title>
+    <author>Автор</author>
+    <price>200</price>
+  </book>
+</catalog>`,
+      note: "Здесь пять правил: по одному на каждый элемент." },
+    { calc: true, question: "Какое ключевое слово в DTD означает «просто текст»? (введите с решёткой)", answer: "#PCDATA",
+      why: "Каждый элемент, внутри которого только текст, нужно объявить именно так.", note: "Оно встречается в каждом из примеров выше." },
+    { calc: true, question: "Какая проверка отвечает на вопрос «соответствует ли документ правилам DTD»: well-formed или valid? (введите слово)", answers: ["valid", "dtd-valid", "dtd valid"],
+      why: "Различать эти две проверки — главное умение темы.", note: "Смотрите таблицу «Проверка / Что подтверждает»." }
+  ]
+},
+{
+  id: 10, tag: "Часть 10", title: "Модель содержания и квантификаторы",
+  html: `
+    <p>Одного имени элемента мало: нужно сказать, сколько раз он может повторяться. Для этого — три знака.</p>
+    <table class="t">
+      <tr><th>Знак</th><th>Смысл</th><th>Пример</th></tr>
+      <tr><td>${k("+")}</td><td>один или больше</td><td>${k("lesson+")}</td></tr>
+      <tr><td>${k("*")}</td><td>ноль или больше</td><td>${k("phone*")}</td></tr>
+      <tr><td>${k("?")}</td><td>ноль или один</td><td>${k("middleName?")}</td></tr>
+      <tr><td><i>нет знака</i></td><td>ровно один</td><td>${k("title")}</td></tr>
+    </table>
+    <p>Через вертикальную черту ${k("|")} перечисляют варианты — подойдёт <b>один</b> из них: ${k("(celsius | fahrenheit)")}. Запятая, как вы уже знаете, задаёт порядок.</p>
+    <div class="callout info"><span class="ct">Как читать</span>${k("(title, author+, price, publisher?)")} читается слева направо: один title, затем один или несколько author, затем одна price и, наконец, необязательный publisher.</div>
+  `,
+  challenges: [
+    { calc: true, question: "Какой знак означает «один или больше»? (введите один символ)", answer: "+", why: "Знаки — основа записи повторяемости.", note: "Смотрите таблицу." },
+    { calc: true, question: "Какой знак означает «ноль или больше»? (введите один символ)", answer: "*", why: "«Ноль» здесь — это возможность не указывать элемент вообще.", note: "Смотрите таблицу." },
+    { calc: true, question: "Какой знак означает «ноль или один»? (введите один символ)", answer: "?", why: "Так записывают необязательный элемент.", note: "Смотрите таблицу." },
+    { calc: true, question: "Правило: (celsius | fahrenheit). Сколько дочерних элементов будет внутри weather? (число)", answer: "1",
+      why: "Вертикальная черта — это «или», а не «и»: берётся один вариант.", note: "Сравните с запятой, которая требует ВСЕ элементы." }
+  ],
+  after: `<p>Наберите правила для каталога книг в отдельном файле DTD. Внутри такого файла нет ни пролога, ни DOCTYPE — только правила.</p>`,
+  challenges2: [
+    { filename: "catalog.dtd", mode: "dtd",
+      why: "Каталог содержит одну и больше книг; у книги обязателен title, один и больше author, одна price и необязательный publisher.",
+      code: `<!ELEMENT catalog (book+)>
+<!ELEMENT book (title, author+, price, publisher?)>
+<!ELEMENT title (#PCDATA)>
+<!ELEMENT author (#PCDATA)>
+<!ELEMENT price (#PCDATA)>
+<!ELEMENT publisher (#PCDATA)>`,
+      note: "Шесть правил — по одному на каждый элемент." },
+    { calc: true, question: "Сколько из пяти книг ниже соответствуют правилу book (title, author+, price, publisher?)? (число)", answer: "2",
+      viewName: "варианты содержимого book", view: `А: title, author, price
+Б: title, price
+В: title, author, author, price, publisher
+Г: author, title, price
+Д: title, author, price, publisher, publisher`,
+      why: "Проверка по DTD — это последовательное чтение правила и сравнение с документом. Так же работает настоящий валидатор.", note: "Проверьте каждый вариант: порядок, обязательные элементы и сколько раз что встречается." },
+    { calc: true, question: "Сколько раз, самое большее, publisher может встретиться внутри одного book по этому правилу? (число)", answer: "1",
+      why: "Знак ? разрешает ноль или один — не два.", note: "Вспомните таблицу знаков." }
+  ]
+},
+{
+  id: 11, tag: "Часть 11", title: "Вложенные книги: выбор и рекурсия",
+  html: `
+    <p>Внутри скобок можно вкладывать скобки и сочетать запятую с вертикальной чертой. Так задаётся выбор между целыми группами элементов.
+    В этом примере книга — это либо обычная книга (title, author+, price, publisher?), либо набор вложенных книг (book+): например, серия книг.</p>
+  `,
+  challenges: [
+    { filename: "demo-4.xml", mode: "xml",
+      why: "Элемент book может содержать либо набор title/author/price, либо другие book — это «рекурсия» в DTD.",
+      code: `<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE catalog [
+  <!ELEMENT catalog (book+)>
+  <!ELEMENT book ((title, author+, price, publisher?) | book+)>
+  <!ELEMENT title (#PCDATA)>
+  <!ELEMENT author (#PCDATA)>
+  <!ELEMENT price (#PCDATA)>
+  <!ELEMENT publisher (#PCDATA)>
+]>
+<catalog>
+  <book>
+    <title>Название</title>
+    <author>Автор</author>
+    <price>123.00</price>
+    <publisher>BHV</publisher>
+  </book>
+  <book>
+    <book>
+      <title>Название</title>
+      <author>Автор</author>
+      <price>123.00</price>
+    </book>
+    <book>
+      <title>Название</title>
+      <author>Автор</author>
+      <author>Автор</author>
+      <price>123.00</price>
+      <publisher>Williams</publisher>
+    </book>
+  </book>
+</catalog>`,
+      note: "Документ длинный — набирайте по блокам и не потеряйте вложенность. Отступы для проверки не важны." },
+    { calc: true, question: "Сколько всего элементов book в документе выше? (число)", answer: "4",
+      why: "Считайте и внешние, и вложенные элементы — правило разрешает вкладывать book в book.", note: "Один book в начале, а ещё один — контейнер для двух вложенных." }
+  ]
+},
+{
+  id: 12, tag: "Часть 12", title: "Атрибуты: ATTLIST, ID и IDREF",
+  html: `
+    <p>Атрибуты элемента описывает правило ${k("<!ATTLIST элемент атрибут тип обязательность>")}.</p>
+    <table class="t">
+      <tr><th>Тип / обязательность</th><th>Что означает</th></tr>
+      <tr><td><b>CDATA</b></td><td>обычный текст</td></tr>
+      <tr><td><b>ID</b></td><td>уникальный идентификатор: не повторяется в документе и начинается с буквы</td></tr>
+      <tr><td><b>IDREF</b></td><td>ссылка на значение атрибута типа ID</td></tr>
+      <tr><td><b>#REQUIRED</b></td><td>атрибут обязателен</td></tr>
+      <tr><td><b>#IMPLIED</b></td><td>атрибут необязателен</td></tr>
+    </table>
+    <div class="callout info"><span class="ct">Число в DTD не проверить</span>В DTD нет типа «число». Ближайший вариант — NMTOKEN (значение без пробелов), допустим и CDATA. Что значение — именно число, за вас проверяет человек.</div>
+    <p>Начнём с необязательного и обязательного атрибутов.</p>
+  `,
+  challenges: [
+    { filename: "demo-5.xml", mode: "xml",
+      why: "isbn — необязательный (#IMPLIED), поэтому у второй книги его может не быть. currency обязателен (#REQUIRED) — он есть у каждой цены.",
+      code: `<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE catalog [
+  <!ELEMENT catalog (book+)>
+  <!ELEMENT book (title, author+, price, publisher?)>
+  <!ELEMENT title (#PCDATA)>
+  <!ELEMENT author (#PCDATA)>
+  <!ELEMENT price (#PCDATA)>
+  <!ELEMENT publisher (#PCDATA)>
+  <!ATTLIST book isbn CDATA #IMPLIED>
+  <!ATTLIST price currency CDATA #REQUIRED>
+]>
+<catalog>
+  <book isbn='456-123-45632'>
+    <title>Название</title>
+    <author>Автор</author>
+    <price currency='RUR'>123.00</price>
+    <publisher>BHV</publisher>
+  </book>
+  <book>
+    <title>Название</title>
+    <author>Автор</author>
+    <price currency='RUR'>123.00</price>
+  </book>
+</catalog>`,
+      note: "Здесь значения атрибутов в одинарных кавычках — это тоже допустимо." },
+    { calc: true, question: "Какое слово в ATTLIST делает атрибут необязательным? (введите с решёткой)", answer: "#IMPLIED",
+      why: "Обязательность — часть каждого правила ATTLIST.", note: "Смотрите таблицу." },
+    { calc: true, question: "Может ли значение атрибута типа ID начинаться с цифры? Введите: да или нет", answer: "нет",
+      why: "Ошибка на этом правиле — самая частая при выполнении заданий с ID.", note: "Значение ID — это «имя»: сначала буква или подчёркивание." }
+  ],
+  after: `<p>Теперь — связь между элементами через ID и IDREF. Это «первичный» и «внешний» ключи мира XML.</p>`,
+  challenges2: [
+    { filename: "demo-6.xml", mode: "xml",
+      why: "У каждого department свой уникальный name (тип ID), а у clerk атрибут department — ссылка на него (IDREF). Элемент department пустой: вся информация в атрибуте.",
+      code: `<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE office [
+  <!ELEMENT office (departments, clerks)>
+  <!ELEMENT departments (department+)>
+  <!ELEMENT clerks (clerk+)>
+  <!ELEMENT clerk (#PCDATA)>
+  <!ELEMENT department EMPTY>
+  <!ATTLIST department name ID #REQUIRED>
+  <!ATTLIST clerk
+    code CDATA #REQUIRED
+    department IDREF #REQUIRED
+  >
+]>
+<office>
+  <departments>
+    <department name='A1'/>
+    <department name='A2'/>
+    <department name='B1'/>
+  </departments>
+  <clerks>
+    <clerk code='1' department='A1'>John</clerk>
+    <clerk code='2' department='A2'>Mike</clerk>
+    <clerk code='3' department='A1'>Peter</clerk>
+    <clerk code='4' department='B1'>Maria</clerk>
+  </clerks>
+</office>`,
+      note: "ATTLIST для clerk занимает несколько строк — так можно перечислить сразу два атрибута." },
+    { calc: true, question: "Сколько сотрудников (clerk) в документе выше работают в отделе A1? (число)", answer: "2",
+      why: "Ссылки IDREF позволяют связывать данные, а не дублировать их.", note: "Ищите clerk с department='A1'." },
+    { calc: true, question: "В документе ниже одна ссылка ведёт «в никуда». Введите её значение.", answer: "C9", viewName: "office-check.xml", view: `<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE office [
+  <!ELEMENT office (departments, clerks)>
+  <!ELEMENT departments (department+)>
+  <!ELEMENT clerks (clerk+)>
+  <!ELEMENT clerk (#PCDATA)>
+  <!ELEMENT department EMPTY>
+  <!ATTLIST department name ID #REQUIRED>
+  <!ATTLIST clerk code CDATA #REQUIRED department IDREF #REQUIRED>
+]>
+<office>
+  <departments>
+    <department name="A1"/>
+    <department name="A2"/>
+  </departments>
+  <clerks>
+    <clerk code="1" department="A1">John</clerk>
+    <clerk code="2" department="A2">Mike</clerk>
+    <clerk code="3" department="C9">Peter</clerk>
+    <clerk code="4" department="A1">Maria</clerk>
+  </clerks>
+</office>`,
+      why: "Валидатор проверяет, что каждая ссылка IDREF указывает на существующий ID — именно так ловят опечатки в кодах.", note: "Сверьте значения department у сотрудников со списком name у отделов." }
+  ]
+},
+{
+  id: 13, tag: "Часть 13", title: "Сущности и внешний DTD",
+  html: `
+    <h3>Сущности</h3>
+    <p><b>Сущность</b> — имя, которое DTD связывает с текстом: ${k('<!ENTITY ithub "ItHub college">')}. В документе её вызывают через амперсанд и точку с запятой:
+    ${k("<company>&ithub;</company>")}. Парсер заменит вызов на текст. Если название изменится, достаточно поправить одну строку.</p>
+    <h3>Внешний DTD</h3>
+    <p>DTD можно вынести в отдельный файл — тогда одни и те же правила используют разные документы: ${k('<!DOCTYPE root SYSTEM "doc.dtd">')} — файл лежит рядом, ${k('<!DOCTYPE root PUBLIC "http://site.ru/doc.dtd">')} — DTD опубликован по ссылке.</p>
+  `,
+  challenges: [
+    { filename: "demo-7.xml", mode: "xml",
+      why: "Три сущности с названиями издательств. В документе вместо текста — вызовы &bhv;, &will; и &apress;.",
+      code: `<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE catalog [
+  <!ELEMENT catalog (book+)>
+  <!ELEMENT book (title, author, price, publisher)>
+  <!ELEMENT title (#PCDATA)>
+  <!ELEMENT author (#PCDATA)>
+  <!ELEMENT price (#PCDATA)>
+  <!ELEMENT publisher (#PCDATA)>
+  <!ENTITY bhv "BHV">
+  <!ENTITY will "Williams">
+  <!ENTITY apress "A-Press Publishing">
+]>
+<catalog>
+  <book>
+    <title>Название</title>
+    <author>Автор</author>
+    <price>123.00</price>
+    <publisher>&bhv;</publisher>
+  </book>
+  <book>
+    <title>Название</title>
+    <author>Автор</author>
+    <price>123.00</price>
+    <publisher>&apress;</publisher>
+  </book>
+  <book>
+    <title>Название</title>
+    <author>Автор</author>
+    <price>123.00</price>
+    <publisher>&will;</publisher>
+  </book>
+</catalog>`,
+      note: "Сущность вызывается как &имя; — без пробелов внутри." },
+    { calc: true, question: "Какой текст окажется в элементе publisher третьей книги после раскрытия сущности? (введите слово)", answer: "Williams",
+      why: "Парсер подставляет значение сущности прямо в документ.", note: "Найдите &will; в объявлениях ENTITY." },
+    { calc: true, question: "Какое ключевое слово подключает DTD из файла, лежащего рядом с документом: SYSTEM или PUBLIC? (введите слово)", answer: "system",
+      why: "Так подключают DTD, который хранится в отдельном файле.", note: "PUBLIC нужен для DTD, опубликованных по ссылке как открытые стандарты." }
+  ],
+  after: `<p>А теперь вынесем правила в отдельный файл. Сначала — сам DTD.</p>`,
+  challenges2: [
+    { filename: "notes.dtd", mode: "dtd",
+      why: "Внутри файла .dtd нет пролога и DOCTYPE — только правила.",
+      code: `<!ELEMENT notes (note+)>
+<!ELEMENT note (#PCDATA)>
+<!ATTLIST note id ID #REQUIRED>`,
+      note: "Три правила: корень, элемент заметки и обязательный уникальный id." },
+    { filename: "notes.xml", mode: "xml",
+      why: "Слово SYSTEM и имя файла связывают документ с DTD. Файл notes.dtd должен лежать в той же папке — вот почему в VS Code открывают папку, а не отдельный файл.",
+      code: `<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE notes SYSTEM "notes.dtd">
+<notes>
+  <note id="n1">Купить хлеб</note>
+  <note id="n2">Позвонить маме</note>
+</notes>`,
+      note: "Внутри квадратных скобок больше ничего нет — правила переехали в файл." }
+  ]
+},
+{
+  id: 14, tag: "Часть 14", title: "Well-formed или DTD-valid?",
+  html: `
+    <p>Проверка документа в VS Code даёт два вида сообщений. Сообщения про <b>теги, кавычки, закрытие, вложенность</b> — это well-formed:
+    документ вообще нельзя прочитать. Сообщения про <b>элемент, порядок, атрибут, ID</b> — это DTD-valid: документ читается, но не подходит под правила.</p>
+    <p>Ниже — DTD и пять документов. Прочитайте правила и разберите каждый документ.</p>
+  `,
+  challenges: [
+    { calc: true, question: "Сколько из пяти документов well-formed (их можно прочитать)? (число)", answer: "3",
+      viewName: "DTD и документы А–Д", view: `DTD:
+<!ELEMENT note (to, body)>
+<!ELEMENT to (#PCDATA)>
+<!ELEMENT body (#PCDATA)>
+<!ATTLIST note priority CDATA #REQUIRED>
+
+А: <note priority="1"><to>Аня</to><body>Привет</body></note>
+Б: <note><to>Аня</to><body>Привет</body></note>
+В: <note priority="1"><to>Аня</to><body>Привет</note>
+Г: <note priority="2"><body>Привет</body><to>Аня</to></note>
+Д: <note priority=3><to>Аня</to><body>Привет</body></note>`,
+      why: "Сначала синтаксис: если документ нельзя прочитать, DTD проверять бессмысленно.", note: "Проверьте кавычки и закрывающие теги у каждого документа." },
+    { calc: true, question: "Сколько из пяти документов DTD-valid (и well-formed, и соответствуют правилам)? (число)", answer: "1",
+      why: "Валидность — это well-formed И соответствие DTD.", note: "У кого есть обязательный атрибут, порядок to → body и все теги на месте?" },
+    { calc: true, question: "Какой документ не well-formed из-за пропущенного закрывающего тега? (одна буква)", answers: ["в", "b"],
+      why: "Умение назвать причину ошибки важнее умения её найти.", note: "У какого документа </body> и </note> не хватает одного тега?" },
+    { calc: true, question: "Какой документ не well-formed из-за атрибута без кавычек? (одна буква)", answers: ["д", "d"],
+      why: "Правило о кавычках действует всегда — и для чисел тоже.", note: "Смотрите на значение priority." },
+    { calc: true, question: "Какой документ well-formed, но не valid из-за неверного порядка элементов? (одна буква)", answers: ["г", "r"],
+      why: "Порядок в скобках через запятую нарушать нельзя.", note: "DTD требует сначала to, потом body." }
+  ]
+},
+{
+  id: 15, tag: "Часть 15", title: "Тренировка: магазин",
+  html: `
+    <p>Теперь вы сами — без образца. По описанию составьте DTD, а затем XML-документ, который ему соответствует. Практикум проверит вашу работу так же, как валидатор.</p>
+    <div class="callout warn"><span class="ct">Подготовка к контрольной точке</span>На настоящей контрольной точке будет другое описание, но те же приёмы: порядок, квантификаторы, ID и IDREF. Если справитесь здесь — справитесь и там.</div>
+    <h3>Описание документа «магазин»</h3>
+    <ol>
+      <li>Корневой элемент — <b>shop</b>.</li>
+      <li><b>shop</b> содержит один <b>customers</b> и один <b>orders</b> (в таком порядке).</li>
+      <li><b>customers</b> содержит минимум один <b>customer</b>; <b>orders</b> — минимум один <b>order</b>.</li>
+      <li><b>customer</b> содержит один <b>name</b> и не больше одного <b>phone</b> (телефон необязателен).</li>
+      <li><b>order</b> содержит один <b>date</b> и любое число <b>item</b> (можно ни одного).</li>
+      <li><b>name</b>, <b>phone</b>, <b>date</b>, <b>item</b> содержат текст.</li>
+      <li><b>customer</b> имеет обязательный атрибут <b>id</b>, значение которого уникально.</li>
+      <li><b>order</b> имеет обязательный атрибут <b>no</b> (число) и обязательный атрибут <b>customer</b> — ссылку на id покупателя.</li>
+      <li><b>item</b> имеет необязательный атрибут <b>qty</b>.</li>
+    </ol>
+    <div class="step"><div class="num">1</div><div class="txt">В VS Code создайте рядом два файла: ${k("shop.dtd")} и ${k("shop.xml")}. Так вы сразу проверите себя настоящим расширением.</div></div>
+    <div class="step"><div class="num">2</div><div class="txt">Сначала DTD. Пишите по одной строке на требование, потом перечитайте вслух.</div></div>
+  `,
+  challenges: [
+    { compose: "shopDtd", question: "Впишите DTD целиком (содержимое файла shop.dtd — только правила, без пролога и DOCTYPE).",
+      placeholder: "Впишите DTD по описанию выше...", rows: 14,
+      why: "Составить DTD по описанию — главный навык контрольной точки.",
+      note: "Для атрибута no («число») подойдёт NMTOKEN или CDATA — в DTD нет числового типа." }
+  ],
+  after: `
+    <div class="step"><div class="num">3</div><div class="txt">Теперь XML. Первой строкой — пролог, второй — подключение внешнего DTD ${k('<!DOCTYPE shop SYSTEM "shop.dtd">')}.</div></div>
+    <div class="step"><div class="num">4</div><div class="txt">Придумайте данные: не меньше двух покупателей (у одного есть телефон, у другого нет) и двух заказов (один без товаров, в другом два и больше). Заказы должны ссылаться на разных покупателей.</div></div>
+  `,
+  challenges2: [
+    { compose: "shopXml", question: "Впишите XML-документ целиком (содержимое файла shop.xml).",
+      placeholder: "Впишите XML-документ по описанию выше...", rows: 22,
+      why: "Валидность документа — это соответствие каждому правилу DTD: порядку, количеству, обязательным атрибутам и ссылкам.",
+      note: "Коды покупателей начинайте с буквы (например c1, c2), а номера заказов пишите цифрами." }
+  ]
+},
+{
+  id: 16, tag: "Финал", title: "Итог", final: true,
+  html: `
+    <p>Вы прошли весь путь: от правил сдачи и рабочего места до собственного DTD и XML-документа, который ему соответствует.</p>
+    <div class="callout ok"><span class="ct">Что вы теперь умеете</span>Отличать XML от HTML и понимать, зачем нужны стандарты вокруг XML. Писать well-formed документы и находить ошибки синтаксиса. Работать с кодировкой, CDATA и пространствами имён. Описывать структуру DTD: элементы, квантификаторы, атрибуты, ID/IDREF, сущности. Проверять документ на well-formed и на DTD-valid.</div>
+    <h3>Что дальше по курсу</h3>
+    <ul>
+      <li><b>XML Schema (XSD)</b> — описание структуры с типами данных: там уже можно проверить, что значение — число.</li>
+      <li><b>XPath</b> — язык запросов к частям XML-документа.</li>
+      <li><b>XSLT</b> — преобразование XML в другие документы.</li>
+    </ul>
+    <h3>Что можно докрутить самостоятельно</h3>
+    <ul>
+      <li>Сделать в VS Code свой DTD для расписания занятий или каталога и проверить его расширением и онлайн-валидатором.</li>
+      <li>Попробовать намеренно сломать документ по каждому из семи правил well-formed и сравнить сообщения об ошибках.</li>
+    </ul>
+  `,
+  challenges: []
+}
+];
+
+/* ============================ СОСТОЯНИЕ ============================ */
+const STORAGE_KEY = "ithub-xml-practicum-progress-v1";
+let state = { current: 0, solved: {}, student: null, autoSubmitted: false, timings: {}, attempts: {}, suspicious: {} };
+
+function loadState() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) state = JSON.parse(raw);
+  } catch (e) { /* нет доступа к storage — работаем в памяти */ }
+  if (!state.timings) state.timings = {};
+  if (!state.attempts) state.attempts = {};
+  if (!state.suspicious) state.suspicious = {};
+  if (!state.solved) state.solved = {};
+}
+function saveState() {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) {}
+}
+function resetProgress() {
+  if (!confirm("Сбросить весь прогресс? Имя и группу нужно будет ввести заново.")) return;
+  state = { current: 0, solved: {}, student: null, autoSubmitted: false, timings: {}, attempts: {}, suspicious: {} };
+  saveState();
+  render();
+}
+
+/* ============================ ЗАДАНИЯ ЧАСТИ ============================ */
+// Три группы заданий в части: challenges, challenges2, challenges3 (между ними — after, after2, after3)
+const GROUPS = [
+  { list: "challenges", tag: "", after: "after" },
+  { list: "challenges2", tag: "b", after: "after2" },
+  { list: "challenges3", tag: "c", after: "after3" }
+];
+function keyOf(partId, tag, i) { return tag ? `${partId}:${tag}${i}` : `${partId}:${i}`; }
+function getChallenge(partId, idx) {
+  const part = PARTS.find(p => p.id === partId);
+  if (typeof idx === "string") {
+    const g = GROUPS.find(x => x.tag && idx.startsWith(x.tag));
+    return part[g.list][parseInt(idx.slice(1), 10)];
+  }
+  return part.challenges[idx];
+}
+function isPartComplete(part) {
+  for (const g of GROUPS) {
+    const list = part[g.list] || [];
+    for (let i = 0; i < list.length; i++) if (!state.solved[keyOf(part.id, g.tag, i)]) return false;
+  }
+  return true;
+}
+
+/* ============================ ВХОД ПО ИМЕНИ ============================ */
+function renderGate(err) {
+  const app = document.getElementById("app");
+  document.getElementById("studentLabel").textContent = "";
+  app.innerHTML = `
+    <div class="gate">
+      <div class="card">
+        <h2 style="margin-top:0;">Прежде чем начать</h2>
+        <p>Введите имя и группу — они попадут в итоговый отчёт, который вы в конце пришлёте преподавателю.</p>
+        <input id="gateName" type="text" placeholder="Имя и фамилия" autocomplete="off">
+        <input id="gateGroup" type="text" placeholder="Группа" autocomplete="off">
+        <button class="gate-btn" onclick="submitGate()">Начать практикум</button>
+        <div class="gate-err">${err || ""}</div>
+      </div>
+    </div>
+  `;
+  document.getElementById("gateName").focus();
+}
+function submitGate() {
+  const name = document.getElementById("gateName").value.trim();
+  const group = document.getElementById("gateGroup").value.trim();
+  if (!name || !group) {
+    renderGate("Заполните оба поля, пожалуйста.");
+    return;
+  }
+  state.student = { name, group };
+  saveState();
+  render();
+}
+
+/* ============================ ОТПРАВКА В GOOGLE ФОРМУ ============================ */
+/* ┌──────────────────────────────────────────────────────────────────────────┐
+   │ НАСТРОЙКА (сделать один раз до выдачи студентам):                         │
+   │ 1. Создайте Google-форму «Отчёты по практикуму XML» с 4 полями            │
+   │    «Ответ (короткий)»: Имя и Фамилия, Группа, Статус, Решено заданий.     │
+   │ 2. Меню ⋮ → «Получить ссылку для предзаполнения» → заполните каждое поле  │
+   │    любым текстом → «Получить ссылку» → скопируйте её.                      │
+   │ 3. В ссылке найдите четыре параметра entry.ЦИФРЫ — впишите их ниже        │
+   │    по порядку полей. В GOOGLE_FORM_ACTION вставьте адрес формы,           │
+   │    заменив в конце /viewform… на /formResponse.                            │
+   │ Пока это не сделано, отчёт можно отправить кнопкой «Скопировать текстом». │
+   └──────────────────────────────────────────────────────────────────────────┘ */
+const GOOGLE_FORM_ACTION = "https://docs.google.com/forms/d/e/1FAIpQLSeBxvkbv3ENkWAIhmPoSXbXGfQCLAsIZiOtVoOAZ2KVxJgeew/formResponse";
+const GOOGLE_FORM_ENTRIES = {
+  name: "entry.297974728",
+  group: "entry.1154430205",
+  status: "entry.1998334715",
+  tasks: "entry.1082785340"
+};
+const EXPECTED_HOST = "koroglu1990.github.io";
+function sourceIsTrusted() {
+  return location.hostname === EXPECTED_HOST;
+}
+function formConfigured() {
+  return /^https:\/\/docs\.google\.com\/forms\/d\/e\/[A-Za-z0-9_-]+\/formResponse$/.test(GOOGLE_FORM_ACTION) &&
+    Object.values(GOOGLE_FORM_ENTRIES).every(v => /^entry\.\d+$/.test(v)) &&
+    !Object.values(GOOGLE_FORM_ENTRIES).some(v => /^entry\.0+\d$/.test(v));
+}
+function collectWorkStats() {
+  let totalSeconds = 0, totalAttempts = 0;
+  const suspiciousFiles = [];
+  PARTS.forEach(p => {
+    GROUPS.forEach(g => (p[g.list] || []).forEach((ch, i) => {
+      const key = keyOf(p.id, g.tag, i);
+      if (state.solved[key]) {
+        totalSeconds += (state.timings[key] && state.timings[key].elapsedSeconds) || 0;
+        totalAttempts += state.attempts[key] || 0;
+        if (state.suspicious[key]) suspiciousFiles.push(ch.filename || `часть ${p.id}, ответ ${i + 1}`);
+      }
+    }));
+  });
+  return { totalSeconds, totalAttempts, suspiciousFiles };
+}
+function reportFields() {
+  const total = PARTS.length;
+  let solvedCount = 0, totalChallenges = 0;
+  PARTS.forEach(p => {
+    GROUPS.forEach(g => (p[g.list] || []).forEach((_, i) => { totalChallenges++; if (state.solved[keyOf(p.id, g.tag, i)]) solvedCount++; }));
+  });
+  const finished = state.current === total - 1 && isPartComplete(PARTS[total - 1]);
+  let status = finished ? "Практикум «XML технологии»: пройден полностью" : `Практикум «XML технологии»: дошёл до части ${state.current + 1} из ${total}`;
+  const work = collectWorkStats();
+  status += ` | время работы: ${formatDuration(work.totalSeconds)} | ошибочных попыток: ${work.totalAttempts}`;
+  if (work.suspiciousFiles.length > 0) {
+    status += ` | ⚠ возможна вставка в: ${work.suspiciousFiles.join(", ")}`;
+  }
+  if (!integrityOk()) {
+    status += ` | ⚠⚠ код проверки был изменён через консоль браузера`;
+  }
+  if (!sourceIsTrusted()) {
+    status = `⚠ ИЗМЕНЁННАЯ КОПИЯ (открыто с ${location.hostname || "локального файла"}) — ` + status;
+  }
+  return { name: state.student.name, group: state.student.group, status, tasks: `${solvedCount} из ${totalChallenges}` };
+}
+function submitToGoogleForm() {
+  if (!state.student || !formConfigured()) return false;
+  const fields = reportFields();
+  const iframeName = "gform-submit-frame";
+  let iframe = document.getElementById(iframeName);
+  if (!iframe) {
+    iframe = document.createElement("iframe");
+    iframe.name = iframeName;
+    iframe.id = iframeName;
+    iframe.style.display = "none";
+    document.body.appendChild(iframe);
+  }
+  const form = document.createElement("form");
+  form.action = GOOGLE_FORM_ACTION;
+  form.method = "POST";
+  form.target = iframeName;
+  form.style.display = "none";
+  Object.keys(GOOGLE_FORM_ENTRIES).forEach(key => {
+    const input = document.createElement("input");
+    input.type = "hidden";
+    input.name = GOOGLE_FORM_ENTRIES[key];
+    input.value = fields[key];
+    form.appendChild(input);
+  });
+  document.body.appendChild(form);
+  form.submit();
+  setTimeout(() => form.remove(), 1500);
+  return true;
+}
+function sendReport(btnId) {
+  const sent = submitToGoogleForm();
+  const btn = document.getElementById(btnId);
+  if (btn) {
+    btn.textContent = sent ? "✓ Отправлено преподавателю" : "Форма не настроена — нажмите «Скопировать текстом»";
+    if (sent) btn.classList.add("copied");
+    setTimeout(() => { btn.textContent = "Отправить преподавателю"; btn.classList.remove("copied"); }, 3500);
+  }
+}
+
+/* ============================ ОТЧЁТ (ТЕКСТ, РЕЗЕРВНЫЙ СПОСОБ) ============================ */
+function buildReport() {
+  const f = reportFields();
+  const work = collectWorkStats();
+  const dtStr = new Date().toLocaleString("ru-RU");
+  let text = `Отчёт о выполнении практикума «XML технологии»
+Студент: ${f.name}
+Группа: ${f.group}
+Дата: ${dtStr}
+Статус: ${f.status.split(" | ")[0]}
+Заданий решено: ${f.tasks}
+Суммарное время работы над заданиями: ${formatDuration(work.totalSeconds)}
+Ошибочных попыток проверки: ${work.totalAttempts}`;
+  if (work.suspiciousFiles.length > 0) {
+    text += `\n⚠ Похоже на вставку текста, а не печать, в заданиях: ${work.suspiciousFiles.join(", ")}`;
+  }
+  if (!integrityOk()) {
+    text += `\n⚠⚠ Обнаружено изменение кода проверки через консоль браузера в этой сессии`;
+  }
+  return text;
+}
+function copyReport(btnId) {
+  const text = buildReport();
+  const btn = document.getElementById(btnId || "copyReportBtn");
+  navigator.clipboard.writeText(text).then(() => {
+    btn.textContent = "✓ Скопировано";
+    btn.classList.add("copied");
+    setTimeout(() => { btn.textContent = "Скопировать текстом (запасной способ)"; btn.classList.remove("copied"); }, 2500);
+  }).catch(() => {
+    btn.textContent = "Не получилось — выделите текст выше вручную";
+  });
+}
+
+let reportModalOpen = false;
+function toggleReportModal(open) {
+  if (!state.student) return;
+  reportModalOpen = open;
+  renderReportModal();
+}
+function renderReportModal() {
+  let existing = document.getElementById("reportModal");
+  if (existing) existing.remove();
+  if (!reportModalOpen) return;
+  const div = document.createElement("div");
+  div.id = "reportModal";
+  div.className = "modal-overlay";
+  div.onclick = (e) => { if (e.target === div) toggleReportModal(false); };
+  div.innerHTML = `
+    <div class="modal-card">
+      <button class="modal-close" onclick="toggleReportModal(false)">✕</button>
+      <h3 style="margin-top:0;">Отчёт о прогрессе на сейчас</h3>
+      <p style="font-size:12.5px;">Можно отправить преподавателю в любой момент, даже если практикум ещё не пройден до конца.</p>
+      <div class="report-box selectable">${escapeHtml(buildReport())}</div>
+      <button class="copy-btn" id="sendReportBtnModal" onclick="sendReport('sendReportBtnModal')">Отправить преподавателю</button>
+      <button class="copy-btn" id="copyReportBtnModal" onclick="copyReport('copyReportBtnModal')" style="background:transparent;color:var(--brand);border:1.5px solid var(--border);">Скопировать текстом (запасной способ)</button>
+    </div>
+  `;
+  document.body.appendChild(div);
+}
+
+/* ============================ ПРОВЕРКА ЗАДАНИЙ ============================ */
+let keydownCounts = {}; // в памяти, не сохраняется — намеренно: перезагрузка = заново печатать
+function bumpKeydown(key, e) {
+  keydownCounts[key] = (keydownCounts[key] || 0) + 1;
+  // Tab в поле кода вставляет два пробела, а не уводит курсор из поля
+  if (e && e.key === "Tab" && e.target && e.target.tagName === "TEXTAREA" && !e.target.readOnly) {
+    e.preventDefault();
+    const t = e.target, s = t.selectionStart;
+    t.value = t.value.slice(0, s) + "  " + t.value.slice(t.selectionEnd);
+    t.selectionStart = t.selectionEnd = s + 2;
+  }
+}
+
+function checkChallenge(partId, idx) {
+  const key = `${partId}:${idx}`;
+  const ta = document.getElementById(`ta-${partId}-${idx}`);
+  const msg = document.getElementById(`msg-${partId}-${idx}`);
+  const ch = getChallenge(partId, idx);
+  const raw = ta.value;
+
+  let res;
+  if (ch.calc) res = checkCalc(ch, raw);
+  else if (ch.compose) res = COMPOSE_CHECKERS[ch.compose](raw);
+  else res = checkTyped(ch, raw);
+
+  if (res.ok) {
+    state.solved[key] = true;
+    const startedAt = state.timings[key] ? state.timings[key].startedAt : Date.now();
+    const elapsedSeconds = Math.max(1, Math.round((Date.now() - startedAt) / 1000));
+    const kd = keydownCounts[key] || 0;
+    state.timings[key] = { startedAt, elapsedSeconds };
+    state.suspicious[key] = raw.length > 15 && kd < raw.length * 0.3;
+    if (ch.compose) { if (!state.composeText) state.composeText = {}; state.composeText[key] = raw; }
+    saveState();
+    msg.className = "result-msg ok";
+    msg.textContent = ch.calc ? "✓ Верно! Можно двигаться дальше." : (ch.compose ? "✓ Всё сходится с описанием! Отлично." : "✓ Совпадает! Можно двигаться дальше.");
+    render();
+  } else {
+    state.attempts[key] = (state.attempts[key] || 0) + 1;
+    saveState();
+    msg.className = "result-msg err";
+    msg.textContent = res.msg || "✗ Пока не совпадает.";
+  }
+}
+
+/* ============================ РЕНДЕР ============================ */
+function escapeHtml(s) {
+  return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+function codeBoxHtml(label, code, viewOnly) {
+  const lines = String(code).split("\n");
+  const body = lines.map((l, i) => `<span class="ln">${i + 1}</span>${escapeHtml(l)}`).join("\n");
+  return `${label ? `<span class="codebox-label">${escapeHtml(label)}</span>` : ""}<div class="codebox${viewOnly ? " view" : ""}" oncopy="return false" oncontextmenu="return false" onselectstart="return false" ondragstart="return false">${body}</div>`;
+}
+function formatDuration(totalSeconds) {
+  const m = Math.floor(totalSeconds / 60);
+  const s = totalSeconds % 60;
+  return m > 0 ? `${m} мин ${s} сек` : `${s} сек`;
+}
+function doneBadge(key) {
+  const t = state.timings[key];
+  return `<span class="done-badge">✓ Сделано${t && t.elapsedSeconds ? ` · ${formatDuration(t.elapsedSeconds)}` : ""}${state.attempts[key] ? ` · попыток: ${state.attempts[key] + 1}` : ""}${state.suspicious[key] ? ` · <span style="color:var(--err-text);">возможна вставка</span>` : ""}</span>`;
+}
+function renderChallenge(part, ch, i, tag) {
+  const idx = tag ? `${tag}${i}` : i;
+  const key = keyOf(part.id, tag, i);
+  const taId = `ta-${part.id}-${idx}`;
+  const msgId = `msg-${part.id}-${idx}`;
+  const solved = !!state.solved[key];
+  if (!solved && !state.timings[key]) {
+    state.timings[key] = { startedAt: Date.now() };
+    saveState();
+  }
+  const idxArg = typeof idx === "string" ? `'${idx}'` : idx;
+  const guards = `onpaste="return false" ondrop="return false" oncontextmenu="return false" onkeydown="bumpKeydown('${key}', event)"`;
+  const actions = `
+    <div class="row2">
+      ${solved ? doneBadge(key) : `<button class="check-btn" onclick="checkChallenge(${part.id}, ${idxArg})">Проверить</button><span class="result-msg" id="${msgId}"></span>`}
+    </div>`;
+  const why = ch.why ? `<p class="why-box">🎯 ${escapeHtml(ch.why)}</p>` : "";
+  const note = ch.note ? `<p style="font-size:12px;color:var(--text-dim);margin-top:6px;">💡 ${escapeHtml(ch.note)}</p>` : "";
+
+  if (ch.calc) {
+    const answerValue = solved ? escapeHtml(String(ch.answers ? ch.answers[0] : ch.answer)) : "";
+    return `
+      <div class="challenge">
+        ${why}
+        ${ch.view ? codeBoxHtml(ch.viewName || "", ch.view, true) : ""}
+        <p style="font-weight:600; color:var(--brand-dark); margin:8px 0;">${escapeHtml(ch.question)}</p>
+        ${ch.note ? `<p style="font-size:12px;color:var(--text-dim);margin-top:-4px;margin-bottom:8px;">💡 ${escapeHtml(ch.note)}</p>` : ""}
+        <input type="text" id="${taId}" placeholder="Впишите ответ..." style="width:100%; padding:10px 12px; font-family:'SFMono-Regular',Menlo,monospace; font-size:14px; border-radius:8px; border:1.5px solid var(--border); background:var(--panel); color:var(--text);" onpaste="return false" ondrop="return false" oncontextmenu="return false" onkeydown="bumpKeydown('${key}', event)" ${solved ? "readonly" : ""} value="${answerValue}">
+        ${actions}
+      </div>`;
+  }
+  if (ch.compose) {
+    return `
+      <div class="challenge">
+        ${why}
+        <p style="font-weight:600; color:var(--brand-dark); margin:8px 0;">${escapeHtml(ch.question)}</p>
+        ${note}
+        <textarea id="${taId}" spellcheck="false" autocomplete="off" autocapitalize="off" style="min-height:${(ch.rows || 12) * 19}px" placeholder="${escapeHtml(ch.placeholder || "")}" ${guards} ${solved ? "readonly" : ""}>${solved ? escapeHtml(state.composeText && state.composeText[key] || "✓ принято") : ""}</textarea>
+        ${actions}
+      </div>`;
+  }
+  const shownCode = ch.shown || ch.code;
+  return `
+    <div class="challenge">
+      ${why}
+      ${codeBoxHtml(ch.filename, shownCode)}
+      ${note}
+      <textarea id="${taId}" spellcheck="false" autocomplete="off" autocapitalize="off" placeholder="Впишите код сюда вручную..." ${guards} ${solved ? "readonly" : ""}>${solved ? escapeHtml(ch.code) : ""}</textarea>
+      ${actions}
+    </div>`;
+}
+
+function render() {
+  if (!state.student) { renderGate(); return; }
+  document.getElementById("studentLabel").textContent = `${state.student.name} · ${state.student.group}`;
+  const part = PARTS[state.current];
+  const app = document.getElementById("app");
+  const total = PARTS.length;
+  const complete = isPartComplete(part);
+
+  let bodyHtml = "";
+  GROUPS.forEach(g => {
+    const list = part[g.list] || [];
+    bodyHtml += list.map((ch, i) => renderChallenge(part, ch, i, g.tag)).join("");
+    bodyHtml += part[g.after] || "";
+  });
+
+  const reportHtml = part.final ? `
+    <h3>Отчёт для преподавателя</h3>
+    <p>Отправьте отчёт преподавателю — это подтверждение, что практикум пройден.</p>
+    <div class="report-box selectable">${escapeHtml(buildReport())}</div>
+    <button class="copy-btn" id="sendReportBtn" onclick="sendReport('sendReportBtn')">Отправить преподавателю</button>
+    <button class="copy-btn" id="copyReportBtn" onclick="copyReport()" style="background:transparent;color:var(--brand);border:1.5px solid var(--border);">Скопировать текстом (запасной способ)</button>
+    <p style="font-size:11px;color:var(--text-dim);margin-top:8px;">При переходе на эту страницу отчёт отправляется автоматически. Кнопка нужна, если хотите отправить ещё раз или что-то пошло не так.</p>
+  ` : "";
+
+  app.innerHTML = `
+    <div class="card">
+      <span class="tag">${escapeHtml(part.tag)}</span>
+      <h2>${escapeHtml(part.title)}</h2>
+      ${part.html}
+      ${bodyHtml}
+      ${reportHtml}
+      <div class="nav-row">
+        <button class="nav-btn secondary" onclick="goPrev()" ${state.current === 0 ? "disabled" : ""}>← Назад</button>
+        <button class="nav-btn" onclick="goNext()" ${(!complete || state.current === total - 1) ? "disabled" : ""}>
+          ${state.current === total - 1 ? "Это финал" : (complete ? "Далее →" : "Выполните задания выше, чтобы продолжить")}
+        </button>
+      </div>
+    </div>
+    <div class="card">
+      <h3 style="margin-top:0;">Содержание</h3>
+      <div class="toc">
+        ${PARTS.map((p, i) => {
+          const done = isPartComplete(p) && i < state.current;
+          const cls = i === state.current ? "current" : (done ? "complete" : (i > state.current && !allPriorComplete(i) ? "locked" : ""));
+          return `<div class="toc-item ${cls}" onclick="${(i <= state.current || allPriorComplete(i)) ? `goTo(${i})` : ''}">
+            <span class="toc-num">${done ? "✓" : i + 1}</span>
+            <span class="toc-title">${escapeHtml(p.title)}</span>
+          </div>`;
+        }).join("")}
+      </div>
+    </div>
+  `;
+
+  const pct = Math.round((state.current / (total - 1)) * 100);
+  document.getElementById("progressFill").style.width = `${pct}%`;
+  document.getElementById("progressText").textContent = `Часть ${state.current + 1} из ${total}`;
+  document.getElementById("progressPct").textContent = `${pct}%`;
+  window.scrollTo({ top: 0, behavior: "instant" });
+}
+
+function allPriorComplete(i) {
+  for (let k = 0; k < i; k++) if (!isPartComplete(PARTS[k])) return false;
+  return true;
+}
+function goNext() {
+  if (!isPartComplete(PARTS[state.current])) return;
+  if (state.current < PARTS.length - 1) {
+    state.current++;
+    if (state.current === PARTS.length - 1 && !state.autoSubmitted) {
+      if (submitToGoogleForm()) state.autoSubmitted = true;
+    }
+    saveState();
+    render();
+  }
+}
+function goPrev() {
+  if (state.current > 0) { state.current--; saveState(); render(); }
+}
+function goTo(i) {
+  if (i <= state.current || allPriorComplete(i)) { state.current = i; saveState(); render(); }
+}
+
+/* ============================ ЗАЩИТА ОТ КОПИРОВАНИЯ ============================ */
+document.addEventListener("copy", function (e) {
+  const active = document.activeElement;
+  if (active && (active.tagName === "TEXTAREA" || active.tagName === "INPUT")) return; // в полях ввода копировать можно
+  e.preventDefault();
+});
+document.addEventListener("contextmenu", function (e) {
+  const active = document.activeElement;
+  if (active && (active.tagName === "TEXTAREA" || active.tagName === "INPUT")) return;
+  e.preventDefault();
+});
+document.addEventListener("keydown", function (e) {
+  const active = document.activeElement;
+  const inField = active && (active.tagName === "TEXTAREA" || active.tagName === "INPUT");
+  const key = e.key.toLowerCase();
+  if ((e.ctrlKey || e.metaKey) && (key === "c" || key === "u") && !inField) {
+    e.preventDefault();
+  }
+  if ((e.ctrlKey || e.metaKey) && key === "s") { e.preventDefault(); }
+});
+
+/* ============================ ПРОВЕРКА ЦЕЛОСТНОСТИ КОДА ============================ */
+// Если студент через консоль браузера подменит функции проверки (например, попросив
+// нейросеть «напиши код, чтобы задание засчитывалось без проверки»), их исходный
+// текст изменится — это и обнаруживаем.
+function simpleHash(str) {
+  let h = 0;
+  for (let i = 0; i < str.length; i++) { h = (h * 31 + str.charCodeAt(i)) | 0; }
+  return h;
+}
+function integritySnapshot() {
+  try {
+    return simpleHash(checkChallenge.toString() + checkCalc.toString() + checkTyped.toString() +
+      checkShopDtd.toString() + checkShopXml.toString() + sourceIsTrusted.toString());
+  } catch (e) { return null; }
+}
+const INTEGRITY_BASELINE = integritySnapshot();
+function integrityOk() {
+  const current = integritySnapshot();
+  return current === null || current === INTEGRITY_BASELINE;
+}
+
+/* ============================ СТАРТ ============================ */
+loadState();
+if (state.current >= PARTS.length) state.current = 0;
+render();
+
+</script>
+</body>
+</html>
